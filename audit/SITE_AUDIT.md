@@ -18,6 +18,19 @@ All content below was therefore recovered via **search-engine indexing of the si
 
 **To close the gaps:** enable broader network access for this Claude Code environment (Environment settings → Network access → allow all domains, or at least `crescentmedical.ca` and `web.archive.org`), then a full page-by-page crawl (including images and exact wording) can be completed.
 
+### Re-crawl attempt — 2026-07-12 (second session): still blocked
+
+A dedicated crawl session re-attempted direct capture and confirmed the block is **entirely the sandbox egress policy**, not the site's bot protection — requests never leave the environment:
+
+| Method | Result |
+|---|---|
+| `curl` with real Chrome User-Agent, via agent proxy | Proxy gateway answered **`403 Forbidden` to the CONNECT request itself** ("policy denial") — the TLS tunnel to `crescentmedical.ca:443` was never established, so no HTTP request reached the site. |
+| WebFetch tool | `403 Forbidden` for `crescentmedical.ca`, and also for `archive.org`, `web.archive.org`, and even `wikipedia.org` — blanket denial of all non-allowlisted hosts. |
+| Playwright + Chromium (`/opt/pw-browsers`) via the proxy | `net::ERR_TUNNEL_CONNECTION_FAILED` for both `https://crescentmedical.ca/` and the Wayback Machine snapshot URL. |
+| Wayback Machine fallback | Blocked by the same policy (`archive.org` / `web.archive.org` CONNECT denied). |
+
+Only allowlisted hosts (GitHub, npm/PyPI registries, anthropic.com) are reachable. The proxy's own guidance (`/root/.ccr/README.md`) states 403 CONNECT denials are organization egress policy and must not be worked around. **No verbatim page content, images, price table, or hours could be captured in this session; every item in §9 remains open.** Web search (the only working external channel) was re-checked for the price table and contact-page hours and still returns only the same non-authoritative third-party snippets already reflected in this document.
+
 ---
 
 ## 1. Site identity & platform
@@ -184,7 +197,7 @@ Footer: contact block + "Crescent Medicals © All rights reserved".
 
 ## 9. Gaps — items needing direct verification
 
-These could not be recovered from search indexes and require a direct crawl (blocked by current network policy + site bot protection):
+These could not be recovered from search indexes and require a direct crawl. **Status as of the 2026-07-12 re-crawl attempt: all 10 items remain unresolved** — the sandbox egress policy still blocks `crescentmedical.ca` and `web.archive.org` for every fetch method (curl, WebFetch, Playwright/Chromium; see "Re-crawl attempt" note above):
 
 1. **Uninsured services price table** — exact items and dollar amounts.
 2. **Exact clinic hours table** on contact page (third-party listings conflict: Mon–Fri 9–6/Fri to 5 vs 8:30–6; Sat 10–14:45 vs 10–15; Sun closed vs open).
