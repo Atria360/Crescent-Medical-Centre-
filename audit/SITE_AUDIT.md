@@ -10,6 +10,7 @@
 
 - **Sessions 1–2 (2026-07-12):** the sandbox egress policy blocked all direct fetches; content was recovered from search-engine snippets only, and every item in §9 was open.
 - **Session 3 (2026-07-12, this revision):** network access was enabled and a **full direct crawl succeeded** (HTTP 200 on every page, `robots.txt`, and `wp-sitemap.xml`). All 10 gaps in §9 are now resolved. Verbatim text extracts of the live pages are committed alongside this file in [`audit/pages/`](pages/).
+- **Session 3, visual capture pass:** all original images downloaded to [`audit/assets/`](assets/) (39 files incl. logo, favicon, team photos, service cards, hero backgrounds), site-specific CSS saved to [`audit/css/`](css/), and full-page browser screenshots of every live page (desktop 1440px + mobile home) rendered to [`audit/screenshots/`](screenshots/) — everything needed to rebuild the site with the **same look**.
 
 The direct crawl also revealed that **the site has been updated since the search snippets were indexed** — the team roster changed, the `/new-team-member/` pages were removed, and some copy differs. Everything below reflects the **live site as of 2026-07-12**; differences from the snippet-based draft are flagged inline.
 
@@ -243,27 +244,76 @@ Intro (verbatim): "Alberta Health Care Plan covers many of the services patients
   - **"Locate Us":** address · "We operate on Saturdays and also accommodate walk-in appointments." · Clinic Hours (Mon–Fri 9 am – 6 pm, Sat 10 am – 3 pm) · Phone · Toll Free
   - Bottom line: "Crescent Medicals © All rights reserved"
 
-## 6. Design tokens (gap #9 closed)
+## 6. Design system / style guide (gap #9 closed — full capture for pixel-matched rebuild)
 
-| Token | Value |
+**Reference material committed in this repo:**
+- [`audit/screenshots/`](screenshots/) — full-page renders of all 8 live pages at 1440px desktop + mobile home (390px). **This is the visual ground truth for the rebuild.**
+- [`audit/css/`](css/) — the site-specific stylesheets: per-page Elementor CSS (`post-*.css`), Essential Addons CSS (`eael-*.css`), the compiled theme-customizer stylesheet (`pix-essentials-style-2.css`), Master Slider `custom.css`, and the hand-written WP Customizer overrides (`wp-custom-css.css` — this small file defines the site-wide font/colour overrides).
+- [`audit/assets/`](assets/) — every original image (see §7).
+
+### 6.1 Color palette
+
+| Role | Hex | Where used |
+|---|---|---|
+| **Primary red** | `#E22004` | Elementor global "primary"; gradient end; accents. Darker variant `#C51C03` also appears. Top-bar phone icons are pure `red`. |
+| **Brand teal** | `#3BC4BD` | Elementor global "secondary"; solid background of the services section, buttons/links, icons |
+| Light teal | `#5EEAD4` | Section/button highlight backgrounds |
+| Heading dark | `#252525` | All heading text & nav (forced via custom CSS) |
+| Near-black variants | `#262626`, `#212529`, `#000000` | Dark sections, footer |
+| Body gray | `#7A7A7A` (Elementor global "text"), `#7F8995` | Body copy |
+| Light backgrounds | `#FFFFFF`, `#F7F7F7`, `#F8F9FA`, `#FAFAFA` | Cards, alternate sections |
+| Gray scale (tabs/tables, from EAEL) | `#101828`, `#1D2939`, `#475467`, `#98A2B3`, `#F9FAFB` | Data tables, tab widgets |
+| Accent orange | `#FF622A` | Small highlights |
+| Accent green | `#61CE70` | Elementor global "accent" (rarely used) |
+| Misc | `#066AAB` (blue), `#37368E` (indigo), `#F8D7DA`/`#FA9196` (soft red) | Isolated elements |
+
+**Signature gradients (the site's most distinctive visual):**
+- Hero/banner overlay: `linear-gradient(135deg, #3BC4BD 30%, #E22004 100%)` (teal → red, applied over hero photos)
+- Semi-transparent variant: `linear-gradient(145deg, #3BC4BDD4 29%, #E2200485 99%)`
+
+### 6.2 Typography
+
+The site-wide look is set by WP Customizer "Additional CSS" ([`css/wp-custom-css.css`](css/wp-custom-css.css)):
+
+```css
+body, h1, h2, h3, h4, h5, p { font-family: 'Montserrat', sans-serif !important; }
+body, h1, h2, h3, h4, h5   { letter-spacing: 1px !important; font-weight: 700 !important; }
+body, p                    { font-size: 14px !important; font-weight: 500 !important; }
+```
+
+⚠️ **Important quirk:** Montserrat is declared everywhere but **never actually loaded as a webfont** — the fonts that load are Manrope 400/700, Poppins 400/700, Roboto, and Roboto Slab. Most visitors therefore see a fallback sans-serif. For the rebuild, load **Montserrat from Google Fonts** (weights 500 + 700) to realize the intended design.
+
+Computed styles measured on the live homepage (1440px):
+| Element | Font | Size / weight / line-height | Color |
+|---|---|---|---|
+| Body / paragraphs | Montserrat (declared) | 14px / 500 / 25.2px, letter-spacing 1px | `#ADB5BD` on dark, `#252525`–`#7A7A7A` on light |
+| H1/H2 (section) | Montserrat | 30px / 700 / 40px, letter-spacing 1px | white on teal/gradient, `#252525` on light |
+| H3 (cards) | Montserrat | 20px / 700 / 25.6px | `#252525` |
+| Nav links | Montserrat | 20px / 500 | `rgba(0,0,0,.9)`, `#252525` |
+| Buttons | Poppins / Montserrat | 14px | — |
+
+### 6.3 Components & shape language
+- **Cards:** white, `border-radius: 20px` (dominant radius — 43 uses on home page CSS), soft drop shadows.
+- **Buttons:** pill-shaped (`border-radius: 50px`), white on gradient/teal sections with teal text; teal on white sections.
+- **Service tiles:** white rounded cards on solid `#3BC4BD` teal band, teal flat icons.
+- **Hero banners (subpages):** photo background + teal→red gradient overlay, white 30px heading, breadcrumb-less.
+- Icon fonts: pixicon (theme), Font Awesome 5/6, eicons, dashicons.
+
+### 6.4 Brand assets
+| Asset | File |
 |---|---|
-| Theme | pixfort **Essentials** (Elementor-based) |
-| Elementor global primary | `#E22004` (red) |
-| Elementor global secondary | `#3BC4BD` (teal) |
-| Elementor global text | `#7A7A7A` |
-| Elementor global accent | `#61CE70` (green) |
-| Extra kit colors | `#3BC4BD` (c17cb69), `#E22004` (f6a29f1) |
-| Global fonts (Elementor) | Roboto (primary/text/accent), Roboto Slab (secondary) |
-| Theme-enqueued fonts | Manrope 400/700, Poppins 400/700 (Google Fonts) |
-| Logo (header) | `wp-content/uploads/2023/10/logo.png` |
-| Logo (footer, white) | `wp-content/uploads/2023/10/creasent-logo-white.png` [sic filename] |
-| Favicon | `wp-content/uploads/2023/10/cropped-02-{32,180,192}.png` |
+| Logo (header, red caduceus + wordmark) | [`assets/logo.png`](assets/logo.png) |
+| Logo (footer, white) | [`assets/creasent-logo-white.png`](assets/creasent-logo-white.png) |
+| Favicon (512px master) | [`assets/cropped-02.png`](assets/cropped-02.png) |
+| Hero photo (home) | [`assets/001.jpg`](assets/001.jpg) + building shot [`assets/apollo-proton_v-2-e1697435246242.jpg`](assets/apollo-proton_v-2-e1697435246242.jpg) |
+| Sub-page hero backgrounds | `aboutus.jpeg`, `medical.jpeg`, `uninsured.jpeg`, `faq.jpeg`, `contact.jpeg`, `viewgallery.jpeg`, `f82ad667-….jpg` (team) — all in [`assets/`](assets/) |
 
-## 7. Image inventory (gap #3 closed)
+## 7. Image inventory (gap #3 closed — **all originals downloaded to [`audit/assets/`](assets/)**)
 
-All under `https://crescentmedical.ca/wp-content/uploads/`:
+39 image files saved locally (full-resolution originals). Source URLs under `https://crescentmedical.ca/wp-content/uploads/`:
 
 - **Branding:** `2023/10/logo.png`, `2023/10/creasent-logo-white.png`, `2023/10/cropped-02-*.png` (favicon)
+- **Page hero/banner backgrounds (CSS `background-image`, easy to miss):** `2023/10/apollo-proton_v-2-e1697435246242.jpg` (home hero building), `2023/11/aboutus.jpeg`, `2023/11/medical.jpeg`, `2023/11/uninsured.jpeg`, `2023/11/faq.jpeg`, `2023/11/contact.jpeg`, `2023/11/viewgallery.jpeg`, `2023/11/f82ad667-7f8c-466c-a340-042ea9436621.jpg` (our-team hero)
 - **Home:** `2023/11/001.jpg` (hero), `2023/10/bookappt_icon.svg`, `2023/10/bookhelathcheck_icon.svg`, `2023/10/buymedicines_icon.svg`, `2023/11/other-resources.jpeg`
 - **About:** `2023/11/mission.jpeg`, `2023/11/vision-goals.jpeg`
 - **Team photos:** `2023/11/Dr.Amira_.jpg`, `2023/11/Luisa-Caro-scaled.jpg`, `2023/12/Dr-Ansari-ddd.jpg` / `2023/11/Dr.Ulya-Ansari-scaled.jpg`, `2023/11/Saumya-Selvaraj.jpg`, `2023/12/Un-300x300.jpg` (Dr. Constantinescu), `2023/11/yasin-888x1024-1.jpg`, `2025/04/Dr-Oluwafunso_phots-1.png`, `2025/04/Irish_Supervisor.png`, `2025/04/Faye_MOA.png`, `2025/04/Elaine_MOA.png`, `2025/04/Monica_MOA.png`, `2023/11/Lavinia.jpg`, `2023/10/nina-mabugat-400x400.jpg` (Mariel card)
