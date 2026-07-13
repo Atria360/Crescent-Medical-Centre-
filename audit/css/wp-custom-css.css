@@ -1,0 +1,209 @@
+
+			/* Font color for Navigation */
+.pix-header-text
+{
+	color: #252525 !important;
+}
+
+
+
+/* Website Fonts Color */
+/* .text-body-default
+{
+	color: #252525 !important;
+}
+ */
+
+
+/* Website Font Family Change */
+body, h1, h2, h3, h4, h5, p
+{
+	font-family: 'Montserrat', sans-serif !important;
+}
+body, h1, h2, h3, h4, h5
+{
+	letter-spacing: 1px !important;
+	font-weight: 700 !important;
+}
+body, p
+{
+	font-size: 14px !important;
+	font-weight: 500 !important;
+}
+
+
+
+/* Elements Used In Home Page -  Font Color */
+/* [data-anim-type="pix-sliding-text"].pix-animate .pix-sliding-item
+{
+	color: #252525 !important;
+}
+.nav-item a 
+{
+	color: #252525 !important;
+} */
+/* .mb-32.pix-sliding-headline-2.font-weight-bold.secondary-font.pix-waiting.pix-animate.pix-sliding-text.animated
+{
+	color: #252525 !important;
+}
+.elementor-widget-wrap>.elementor-element
+{
+	color: #252525 !important;
+}
+.text-20.resp-option.text-dark-opacity-4.text-left
+{
+	color: #252525 !important;
+}
+.text-heading-default, a
+{
+	color: #252525 !important;
+} */
+#icnbox-1:hover .txt-1 h3 a
+{
+	color: white !important;
+}
+#icnbox-2:hover .txt-2 h3 a
+{
+	color: white !important;
+}
+#icnbox-3:hover .txt-3 h3 a
+{
+	color: white !important;
+}
+
+
+
+/* Font Family Change in About Us Page */
+.elementor-widget-container, ul, li
+{
+ font-family: 'Montserrat', sans-serif !important;
+}
+.elementor-icon-list-text
+{
+	font-family: 'Montserrat', sans-serif !important;
+}
+.blockquote2.mb-0.card-body.text-center
+{
+	font-family: 'Montserrat', sans-serif !important;
+}
+.blockquote2.mb-0.card-body.text-center p 
+{
+	color: #252525 !important;
+}
+
+
+/* Navigation Hover Underline Color */
+.navbar .pix-primary-nav-line .nav-style-megamenu>li.nav-item .nav-link span:after
+{
+	background-color: #C51C03 !important;
+}
+
+
+
+/* Sticky Header Bottom Border */
+.pix-header.pix-is-sticky-header.pix-header-desktop.d-block.pix-header-normal.pix-scroll-shadow.header-scroll.pix-header-container-area.bg-white
+{
+	box-shadow: 2px 2px 3px !important;
+}
+
+
+
+/* Patient Services Page Corections, on Filterable Gallery */
+.page-id-1480
+.gallery-item-caption-wrap.caption-style-card, .gallery-item-caption-over, .fg-item-content p 
+{
+	color: white !important;
+}
+
+
+
+/* Uninsured Services Page */
+.tablesorter.eael-data-table.center
+{
+	border-collapse: collapse !important;
+}
+
+
+
+/* Button Background Color */
+/* #btn-txt .elementor-button-wrapper a
+{
+	color: white !important;
+} */
+
+
+
+/* Home Page Under Banner Section Mobile Responsive  */
+@media (max-width: 480px)
+{
+#icnbox-1, #icnbox-2, #icnbox-3, #icnbox-4, #icnbox-5, #icnbox-6 
+{
+	padding-top: 25px !important;
+	padding-bottom: 50px !important;
+}
+}
+
+
+
+/* Home Page Under Banner Section Tab Responsive  */
+@media (min-width: 768px)
+{
+#icnbox-1, #icnbox-2, #icnbox-3, #icnbox-4, #icnbox-5, #icnbox-6 
+{
+	width: 50% !important;
+}
+}
+
+
+
+/* Elementor Widget Container */
+.elementor-widget-container, .elementor-button-wrapper a
+{
+	font-family: 'Montserrat', sans-serif !important;
+}
+
+
+
+/* Pixfort text font-family */
+.mb-32.pix-sliding-headline-2.font-weight-bold.secondary-font.pix-waiting.pix-animate.pix-sliding-text.animated
+{
+	font-family: 'Montserrat',sans-serif !important;
+}
+
+
+
+/* Top Bar Icon Color */
+.pixicon-outgoing-call-1:before
+{
+	color: red !important;
+}
+
+
+
+/* Mobile Navigation Under Box Shadow */
+#mobile_head
+{
+	box-shadow: 2px 2px 2px lightgrey !important;
+}
+
+
+
+/* Header Font Weight */
+.pix-header-text
+{
+	font-weight: 400 !important;
+}
+
+
+
+/* FAQ Page accordion text color */
+.new-feedback, .card-body
+{
+	color: white !important;
+}
+.new-feedback .card-body a
+{
+	font-weight: bold !important;
+	text-decoration: underline !important;
+	color: black !important;
+}		
