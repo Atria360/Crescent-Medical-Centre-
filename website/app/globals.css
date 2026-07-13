@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply text-[14px] font-medium leading-relaxed;
+  }
+  h1, h2, h3, h4, h5 {
+    @apply font-bold tracking-brand;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-block rounded-full px-8 py-3 text-sm font-semibold transition-colors duration-200;
+  }
+  .btn-white {
+    @apply btn bg-white text-teal hover:bg-teal hover:text-white shadow-md;
+  }
+  .btn-teal {
+    @apply btn bg-teal text-white hover:bg-teal-dark shadow-md;
+  }
+  .btn-red {
+    @apply btn bg-brand-red text-white hover:bg-brand-reddark shadow-md;
+  }
+  .card {
+    @apply rounded-card bg-white shadow-lg;
+  }
+  .section-heading {
+    @apply text-3xl leading-tight;
+  }
+}
