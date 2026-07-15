@@ -2,7 +2,7 @@ import PageHero from "@/components/site/PageHero";
 import { getBlock, getCollection, s } from "@/lib/content";
 import { mediaUrl } from "@/lib/config";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata = { title: "Medical Services – Crescent Medical Centre" };
 
@@ -28,15 +28,16 @@ export default async function ServicesPage() {
       />
 
       <section className="mx-auto max-w-7xl px-4 py-20">
-        <h2 className="section-heading text-center">{s(block, "list_heading")}</h2>
+        <h2 className="section-heading heading-accent text-center" data-reveal>{s(block, "list_heading")}</h2>
         <div className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {services.map((service) => (
-            <article key={service.id} className="card overflow-hidden transition-transform hover:-translate-y-1">
+            <article key={service.id} className="card overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-xl" data-reveal>
               {service.image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={mediaUrl(service.image_url)}
                   alt={service.title}
+                  loading="lazy"
                   className="aspect-[3/2] w-full object-cover"
                 />
               ) : (

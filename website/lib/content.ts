@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export type BlockData = Record<string, unknown>;
 
 export async function getBlocks(keys: string[]): Promise<Record<string, BlockData>> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("content_blocks")
     .select("key, data")
@@ -22,7 +22,7 @@ export async function getCollection<T = Record<string, unknown>>(
   table: string,
   opts: { filter?: [string, unknown]; orderBy?: string } = {}
 ): Promise<T[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   let q = supabase.from(table).select("*").order(opts.orderBy ?? "sort", { ascending: true });
   if (opts.filter) q = q.eq(opts.filter[0], opts.filter[1] as never);
   const { data } = await q;

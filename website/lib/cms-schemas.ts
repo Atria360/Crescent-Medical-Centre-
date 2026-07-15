@@ -34,6 +34,7 @@ export const BLOCK_SCHEMAS: BlockSchema[] = [
       { name: "email", label: "Email", type: "text" },
       { name: "address", label: "Address", type: "text" },
       { name: "map_embed_src", label: "Google Maps embed URL", type: "textarea" },
+      { name: "directions_url", label: "Google Maps directions link", type: "text" },
       { name: "facebook", label: "Facebook URL", type: "text" },
       { name: "instagram", label: "Instagram URL", type: "text" },
       {
@@ -44,6 +45,20 @@ export const BLOCK_SCHEMAS: BlockSchema[] = [
       { name: "topbar_left_1", label: "Top bar item 1", type: "text" },
       { name: "topbar_left_2", label: "Top bar item 2", type: "text" },
       { name: "footer_tagline", label: "Footer tagline", type: "textarea" },
+      {
+        name: "footer_services", label: "Footer — Services column links", type: "list",
+        of: [
+          { name: "label", label: "Label", type: "text" },
+          { name: "href", label: "Link", type: "text" },
+        ],
+      },
+      {
+        name: "footer_quicklinks", label: "Footer — Quick Links column", type: "list",
+        of: [
+          { name: "label", label: "Label", type: "text" },
+          { name: "href", label: "Link", type: "text" },
+        ],
+      },
       { name: "copyright", label: "Copyright line", type: "text" },
       { name: "chatbot_embed_id", label: "Collect.chat widget id (empty = off)", type: "text" },
     ],

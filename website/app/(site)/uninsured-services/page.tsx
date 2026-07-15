@@ -1,7 +1,7 @@
 import PageHero from "@/components/site/PageHero";
 import { getBlock, getCollection, s } from "@/lib/content";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata = { title: "Uninsured Services – Crescent Medical Centre" };
 
@@ -33,14 +33,14 @@ export default async function UninsuredPage() {
       />
 
       <section className="mx-auto max-w-5xl px-4 py-20">
-        <h2 className="section-heading">{s(block, "intro_heading")}</h2>
+        <h2 className="section-heading" data-reveal>{s(block, "intro_heading")}</h2>
         <p className="mt-5 text-sm leading-relaxed text-brand-body">{s(block, "intro_body")}</p>
 
         {sections.map((section) => {
           const rows = items.filter((i) => i.section_id === section.id);
           if (rows.length === 0) return null;
           return (
-            <div key={section.id} className="mt-12">
+            <div key={section.id} className="mt-12" data-reveal>
               <h3 className="text-xl">{section.title}</h3>
               <div className="mt-4 overflow-x-auto rounded-card border border-gray-100 shadow-sm">
                 <table className="w-full border-collapse text-sm">

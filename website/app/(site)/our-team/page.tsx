@@ -2,7 +2,7 @@ import PageHero from "@/components/site/PageHero";
 import { getBlock, getCollection, s } from "@/lib/content";
 import { mediaUrl } from "@/lib/config";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata = { title: "Our Team – Crescent Medical Centre" };
 
@@ -34,11 +34,12 @@ export default async function TeamPage() {
       />
 
       <section className="mx-auto max-w-7xl px-4 py-20">
-        <h2 className="section-heading text-center">{s(block, "physicians_heading")}</h2>
+        <h2 className="section-heading heading-accent text-center" data-reveal>{s(block, "physicians_heading")}</h2>
         <div className="mt-14 space-y-16">
           {[...physicians, ...staff].map((m, i) => (
             <article
               key={m.id}
+              data-reveal
               className={`flex flex-col items-center gap-10 lg:flex-row ${i % 2 ? "lg:flex-row-reverse" : ""}`}
             >
               {m.photo_url ? (
@@ -46,6 +47,7 @@ export default async function TeamPage() {
                 <img
                   src={mediaUrl(m.photo_url)}
                   alt={m.name}
+                  loading="lazy"
                   className="h-64 w-64 shrink-0 rounded-card object-cover shadow-lg"
                 />
               ) : (
@@ -68,16 +70,17 @@ export default async function TeamPage() {
       {assistants.length > 0 && (
         <section className="bg-teal py-20 text-white">
           <div className="mx-auto max-w-7xl px-4 text-center">
-            <h2 className="section-heading">{s(block, "assistants_heading")}</h2>
+            <h2 className="section-heading" data-reveal>{s(block, "assistants_heading")}</h2>
             <p className="mt-3 text-sm">{s(block, "assistants_subheading")}</p>
             <div className="mt-12 grid grid-cols-2 gap-8 md:grid-cols-5">
               {assistants.map((m) => (
-                <div key={m.id} className="card overflow-hidden pb-5 text-brand-dark">
+                <div key={m.id} className="card overflow-hidden pb-5 text-brand-dark hover:shadow-xl" data-reveal>
                   {m.photo_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={mediaUrl(m.photo_url)}
                       alt={m.name}
+                      loading="lazy"
                       className="aspect-square w-full object-cover"
                     />
                   ) : (
