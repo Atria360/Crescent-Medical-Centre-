@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getBlocks, getCollection, s, list } from "@/lib/content";
 import { mediaUrl } from "@/lib/config";
+import ChatOpenButton from "@/components/site/ChatOpenButton";
 
 export const revalidate = 60;
 
@@ -203,7 +204,7 @@ export default async function HomePage() {
               {s(
                 chatbot,
                 "help_body",
-                "Whether you'd like to book an appointment, ask about a service, or just need general information, our friendly team is ready to assist — and happy to see walk-ins too."
+                "Whether you'd like to book an appointment, ask about a service, or just need general information, chat with our virtual assistant or reach our friendly team — walk-ins are always welcome too."
               )}
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
@@ -213,6 +214,7 @@ export default async function HomePage() {
                   Call {s(settings, "phone")}
                 </a>
               ) : null}
+              <ChatOpenButton label="Chat with us" />
               <Link
                 href="/contact-us"
                 className="inline-flex items-center gap-2 rounded-full border border-white/70 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10"

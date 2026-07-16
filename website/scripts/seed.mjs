@@ -98,7 +98,7 @@ const blocks = {
   home_chatbot: {
     help_heading: "Have Questions? We're Here to Help",
     help_body:
-      "Whether you'd like to book an appointment, ask about a service, or just need general information, our friendly team is ready to assist — and we're happy to see walk-ins too.",
+      "Whether you'd like to book an appointment, ask about a service, or just need general information, chat with our virtual assistant or reach our friendly team — walk-ins are always welcome too.",
   },
   home_business: {
     heading: "BUSINESS ENQUIRIES",
