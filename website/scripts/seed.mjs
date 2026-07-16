@@ -55,7 +55,9 @@ const blocks = {
     footer_tagline:
       "Take your first step towards happiness with Canada’s Trusted Wellness Hub – Your Destination for a Healthier You",
     copyright: "Crescent Medical Centre © All rights reserved",
-    chatbot_embed_id: "652d9ba6df70161214caab93",
+    google_reviews_url:
+      "https://www.google.com/maps/search/?api=1&query=Crescent+Medical+Centre+Calgary",
+    form_email: "emailtocrescent@gmail.com",
   },
   home_hero: {
     heading: "Greetings from Crescent Medical Center – Where Your Health is Our Priority!",
@@ -94,14 +96,15 @@ const blocks = {
     subheading: "Meet Our Dedicated Team at Crescent Medical Center",
   },
   home_chatbot: {
-    heading: "Connect with Our Chatbot",
-    body: "Need quick assistance or have questions? Chat with our 24/7 interactive chatbot! Click the chat icon to get instant help—whether it’s scheduling appointments, service inquiries, or general information, our chatbot is here for you.",
-    body2: "For urgent matters, reach out to us directly by phone or email. Start chatting now for swift support!",
+    help_heading: "Have Questions? We're Here to Help",
+    help_body:
+      "Whether you'd like to book an appointment, ask about a service, or just need general information, our friendly team is ready to assist — and we're happy to see walk-ins too.",
   },
   home_business: {
     heading: "BUSINESS ENQUIRIES",
     body: "Contact us anytime for assistance with your business-related inquiries and concerns. Our dedicated team is here to help.",
     email: "imcrescentmedcentre@gmail.com",
+    cta_label: "Reach Out",
   },
   home_resources: {
     heading: "Additional Resources",
@@ -194,9 +197,9 @@ const blocks = {
     form_heading: "Contact Us at Crescent Medical Center",
     form_body:
       "At Crescent Medical, we strive to simplify your healthcare experience. Our commitment is to offer top-notch medical services, continuous support, and unwavering care. Whether you need to reach out to a specialist, inquire about our services, or have any questions, please complete the form below. We’ll promptly respond to your inquiries.",
-    feedback_heading: "Share Your Feedback",
-    feedback_body:
-      "For any business inquiries, or any related assistance, please don't hesitate to reach out to us.",
+    reviews_heading: "Loved Your Experience?",
+    reviews_body:
+      "Your feedback means the world to us — and it helps other families in Calgary find trusted care. Please take a moment to share your visit with a quick review on Google.",
   },
   gallery_page: {
     hero_heading: "Our Gallery",
@@ -208,7 +211,7 @@ const blocks = {
 const blockLabels = {
   settings: "Site Settings", home_hero: "Home — Hero", home_quick_cards: "Home — Quick action cards",
   home_services: "Home — Services section", home_why: "Home — Why Choose Us", home_team: "Home — Team section",
-  home_chatbot: "Home — Chatbot section", home_business: "Home — Business enquiries",
+  home_chatbot: "Home — Help / Contact CTA", home_business: "Home — Business enquiries",
   home_resources: "Home — Additional resources", about_page: "About Us page", team_page: "Our Team page",
   services_page: "Medical Services page", uninsured_page: "Uninsured Services page", faq_page: "FAQ page",
   contact_page: "Contact Us page", gallery_page: "View Clinic (Gallery) page",

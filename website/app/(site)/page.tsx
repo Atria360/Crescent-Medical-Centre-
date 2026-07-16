@@ -191,21 +191,46 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Chatbot + business enquiries */}
+      {/* Help CTA + business enquiries */}
       <section className="mx-auto grid max-w-7xl gap-10 px-4 py-20 lg:grid-cols-2">
-        <div className="card min-w-0 bg-brand-gradient p-7 text-white md:p-10" data-reveal>
-          <h2 className="text-2xl">{s(chatbot, "heading")}</h2>
-          <p className="mt-4 text-sm leading-relaxed">{s(chatbot, "body")}</p>
-          <p className="mt-3 text-sm leading-relaxed">{s(chatbot, "body2")}</p>
+        <div className="card relative min-w-0 overflow-hidden bg-brand-gradient p-7 text-white md:p-10" data-reveal>
+          <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-white/10" />
+          <div className="relative">
+            <h2 className="text-2xl">
+              {s(chatbot, "help_heading", "Have Questions? We're Here to Help")}
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed">
+              {s(
+                chatbot,
+                "help_body",
+                "Whether you'd like to book an appointment, ask about a service, or just need general information, our friendly team is ready to assist — and happy to see walk-ins too."
+              )}
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              {s(settings, "phone") ? (
+                <a href={`tel:${s(settings, "phone")}`} className="btn-white inline-flex items-center gap-2">
+                  <PhoneIcon />
+                  Call {s(settings, "phone")}
+                </a>
+              ) : null}
+              <Link
+                href="/contact-us"
+                className="inline-flex items-center gap-2 rounded-full border border-white/70 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10"
+              >
+                Book an Appointment
+              </Link>
+            </div>
+          </div>
         </div>
         <div className="card min-w-0 border border-gray-100 p-7 md:p-10" data-reveal data-reveal-delay="1">
           <h2 className="text-2xl">{s(business, "heading")}</h2>
           <p className="mt-4 text-sm text-brand-body">{s(business, "body")}</p>
           <a
             href={`mailto:${s(business, "email")}`}
-            className="btn-teal mt-6 max-w-full break-all px-5 text-center"
+            className="btn-teal mt-6 inline-flex items-center gap-2 self-start"
           >
-            {s(business, "email")}
+            {s(business, "cta_label", "Reach Out")}
+            <ArrowIcon />
           </a>
         </div>
       </section>
@@ -262,6 +287,22 @@ export default async function HomePage() {
         </section>
       ) : null}
     </>
+  );
+}
+
+function PhoneIcon() {
+  return (
+    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+      <path d="M6.62 10.79a15.53 15.53 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.4 11.4 0 0 0 3.57.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.24.2 2.45.57 3.57a1 1 0 0 1-.24 1.02l-2.21 2.2Z" />
+    </svg>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
   );
 }
 

@@ -1,4 +1,3 @@
-import Script from "next/script";
 import TopBar from "@/components/site/TopBar";
 import Header from "@/components/site/Header";
 import Footer from "@/components/site/Footer";
@@ -10,7 +9,6 @@ export const revalidate = 60;
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const settings = await getBlock("settings");
-  const chatbotId = s(settings, "chatbot_embed_id");
 
   return (
     <>
@@ -20,13 +18,6 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <Footer settings={settings} />
       <FloatingCall phone={s(settings, "phone")} />
       <Effects />
-      {chatbotId ? (
-        <Script
-          id="collect-chat"
-          src={`https://links.collect.chat/${chatbotId}`}
-          strategy="lazyOnload"
-        />
-      ) : null}
     </>
   );
 }

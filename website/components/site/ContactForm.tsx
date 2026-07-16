@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 
 export default function ContactForm({
   withSubject = true,
@@ -22,19 +21,27 @@ export default function ContactForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setState("sending");
-    const supabase = createClient();
-    const { error } = await supabase.from("messages").insert({
-      subject: withSubject ? form.subject : defaultSubject,
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      message: form.message,
-    });
-    if (error) {
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: withSubject ? form.subject : defaultSubject,
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          message: form.message,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean };
+      if (res.ok && data.ok) {
+        setState("sent");
+        setForm({ subject: defaultSubject, name: "", email: "", phone: "", message: "" });
+      } else {
+        setState("error");
+      }
+    } catch {
       setState("error");
-    } else {
-      setState("sent");
-      setForm({ subject: defaultSubject, name: "", email: "", phone: "", message: "" });
     }
   }
 
