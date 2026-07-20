@@ -60,7 +60,8 @@ export const BLOCK_SCHEMAS: BlockSchema[] = [
         ],
       },
       { name: "copyright", label: "Copyright line", type: "text" },
-      { name: "chatbot_embed_id", label: "Collect.chat widget id (empty = off)", type: "text" },
+      { name: "google_reviews_url", label: "Google review link", type: "text" },
+      { name: "form_email", label: "Contact form recipient email", type: "text" },
     ],
   },
   {
@@ -129,12 +130,11 @@ export const BLOCK_SCHEMAS: BlockSchema[] = [
   },
   {
     key: "home_chatbot",
-    label: "Home — Chatbot section",
+    label: "Home — Help / Contact CTA",
     group: "Home",
     fields: [
-      { name: "heading", label: "Heading", type: "text" },
-      { name: "body", label: "Text", type: "textarea" },
-      { name: "body2", label: "Second paragraph", type: "textarea" },
+      { name: "help_heading", label: "Heading", type: "text" },
+      { name: "help_body", label: "Text", type: "textarea" },
     ],
   },
   {
@@ -144,7 +144,8 @@ export const BLOCK_SCHEMAS: BlockSchema[] = [
     fields: [
       { name: "heading", label: "Heading", type: "text" },
       { name: "body", label: "Text", type: "textarea" },
-      { name: "email", label: "Email", type: "text" },
+      { name: "email", label: "Email (used for the button link, not shown)", type: "text" },
+      { name: "cta_label", label: "Button label", type: "text" },
     ],
   },
   {
@@ -266,8 +267,8 @@ export const BLOCK_SCHEMAS: BlockSchema[] = [
       },
       { name: "form_heading", label: "Form heading", type: "text" },
       { name: "form_body", label: "Form intro", type: "textarea" },
-      { name: "feedback_heading", label: "Feedback form heading", type: "text" },
-      { name: "feedback_body", label: "Feedback form intro", type: "textarea" },
+      { name: "reviews_heading", label: "Google review card heading", type: "text" },
+      { name: "reviews_body", label: "Google review card intro", type: "textarea" },
     ],
   },
   {
