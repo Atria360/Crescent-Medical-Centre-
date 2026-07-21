@@ -63,7 +63,7 @@ export default async function ChooserPage() {
                 <img
                   src={mediaUrl(loc.logo_white)}
                   alt={`${loc.name} ${loc.area}`}
-                  className="mb-6 h-20 w-auto"
+                  className="mb-6 h-16 w-auto max-w-[280px] object-contain md:h-24"
                 />
               ) : (
                 <p className="mb-2 text-lg font-semibold tracking-widest">{loc.name.toUpperCase()}</p>

@@ -247,6 +247,8 @@ for (const [key, data] of Object.entries(blocks)) {
       color_primary: "#06645D", color_primary_dark: "#04544E",
       color_accent: "#0186E6", color_accent_dark: "#012054", color_gold: "#F2C455",
       address: "150-909 5 Avenue SW, Calgary, AB",
+      phone: "825 395 4309", toll_free: "877 867 8114", fax: "825 395 4400",
+      email: "info@crescentmedical.ca", form_email: "info@crescentmedical.ca",
       tagline: "Now open in the heart of downtown Calgary",
       hours: [{ line: "Monday - Friday 9 am - 6 pm" }, { line: "Saturday - 10 am - 3 pm" }],
       hours_note: "Walk-ins welcome. Please call ahead to confirm hours during our opening period.",

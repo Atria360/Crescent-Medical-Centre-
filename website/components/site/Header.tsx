@@ -34,7 +34,11 @@ export default function Header({
         <Link href={base} className="flex items-center gap-3">
           {location.logo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={mediaUrl(location.logo)} alt={`${siteName} ${location.area}`} className="h-14 w-auto" />
+            <img
+              src={mediaUrl(location.logo)}
+              alt={`${siteName} ${location.area}`}
+              className="h-12 w-auto max-w-[230px] object-contain md:h-16"
+            />
           ) : (
             <span className="text-xl font-bold">
               {siteName} <span className="text-teal">{location.area}</span>

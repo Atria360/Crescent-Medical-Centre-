@@ -37,6 +37,7 @@ export const LOCATION_FIELDS: Field[] = [
   { name: "color_gold", label: "Highlight / gold color", type: "color" },
   { name: "phone", label: "Phone", type: "text" },
   { name: "toll_free", label: "Toll-free", type: "text" },
+  { name: "fax", label: "Fax", type: "text" },
   { name: "email", label: "Email", type: "text" },
   { name: "form_email", label: "Contact form recipient email", type: "text" },
   { name: "address", label: "Address", type: "text" },

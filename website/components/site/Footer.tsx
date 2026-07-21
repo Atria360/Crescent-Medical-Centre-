@@ -43,7 +43,7 @@ export default function Footer({ settings, location }: { settings: BlockData; lo
               <img
                 src={mediaUrl(location.logo_white)}
                 alt={`${location.name} ${location.area}`}
-                className="mb-4 h-14 w-auto"
+                className="mb-4 h-14 w-auto max-w-[230px] object-contain md:h-16"
                 loading="lazy"
               />
             ) : (
@@ -138,6 +138,7 @@ export default function Footer({ settings, location }: { settings: BlockData; lo
                 Toll Free: <a href={`tel:${location.toll_free}`} className="hover:text-teal">{location.toll_free}</a>
               </p>
             )}
+            {location.fax && <p className="text-sm">Fax: {location.fax}</p>}
           </div>
         </div>
       </div>
