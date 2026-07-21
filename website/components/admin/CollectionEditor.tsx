@@ -5,24 +5,52 @@ import { createClient } from "@/lib/supabase/client";
 import type { CollectionSchema, Column } from "@/lib/cms-schemas";
 import { TextField, ImageField, inputCls } from "./fields";
 import { mediaUrl } from "@/lib/config";
+import { useAdminLocation } from "./LocationContext";
 
 type Row = Record<string, unknown> & { id: string };
 
 export default function CollectionEditor({ schema }: { schema: CollectionSchema }) {
+  const { currentSlug, ready } = useAdminLocation();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [editing, setEditing] = useState<Row | "new" | null>(null);
   const [error, setError] = useState("");
   const [feeSections, setFeeSections] = useState<{ id: string; title: string }[]>([]);
 
   const load = useCallback(async () => {
+    if (!ready || !currentSlug) return;
     const supabase = createClient();
-    const { data } = await supabase.from(schema.table).select("*").order(schema.orderBy);
-    setRows((data as Row[]) ?? []);
+
+    // fee_items have no location column — they belong to this location's fee
+    // sections, so scope them by those sections' ids.
     if (schema.table === "fee_items") {
-      const { data: sections } = await supabase.from("fee_sections").select("id, title").order("sort");
-      setFeeSections(sections ?? []);
+      const { data: sections } = await supabase
+        .from("fee_sections")
+        .select("id, title")
+        .eq("location", currentSlug)
+        .order("sort");
+      const secs = sections ?? [];
+      setFeeSections(secs);
+      const ids = secs.map((s) => s.id);
+      if (ids.length === 0) {
+        setRows([]);
+        return;
+      }
+      const { data } = await supabase
+        .from("fee_items")
+        .select("*")
+        .in("section_id", ids)
+        .order(schema.orderBy);
+      setRows((data as Row[]) ?? []);
+      return;
     }
-  }, [schema.table, schema.orderBy]);
+
+    const { data } = await supabase
+      .from(schema.table)
+      .select("*")
+      .eq("location", currentSlug)
+      .order(schema.orderBy);
+    setRows((data as Row[]) ?? []);
+  }, [schema.table, schema.orderBy, currentSlug, ready]);
 
   useEffect(() => {
     load();
@@ -48,6 +76,7 @@ export default function CollectionEditor({ schema }: { schema: CollectionSchema 
         <RowForm
           schema={schema}
           feeSections={feeSections}
+          location={currentSlug}
           row={editing === "new" ? null : editing}
           onDone={async () => {
             setEditing(null);
@@ -125,11 +154,12 @@ function CellValue({
 }
 
 function RowForm({
-  schema, row, feeSections, onDone, onCancel,
+  schema, row, feeSections, location, onDone, onCancel,
 }: {
   schema: CollectionSchema;
   row: Row | null;
   feeSections: { id: string; title: string }[];
+  location: string;
   onDone: () => void;
   onCancel: () => void;
 }) {
@@ -151,6 +181,8 @@ function RowForm({
     const supabase = createClient();
     const payload: Record<string, unknown> = {};
     for (const c of schema.columns) payload[c.name] = data[c.name];
+    // Stamp new rows with the active location (fee_items inherit via their section).
+    if (!row && schema.table !== "fee_items") payload.location = location;
     const q = row
       ? supabase.from(schema.table).update(payload).eq("id", row.id)
       : supabase.from(schema.table).insert(payload);

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { getBlock, s } from "@/lib/content";
+import { getLocation } from "@/lib/locations";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,6 +12,7 @@ type Payload = {
   phone?: string;
   subject?: string;
   message?: string;
+  location?: string;
 };
 
 export async function POST(req: Request) {
@@ -26,26 +28,42 @@ export async function POST(req: Request) {
   const phone = (body.phone ?? "").trim();
   const subject = (body.subject ?? "Contact form").trim() || "Contact form";
   const message = (body.message ?? "").trim();
+  const location = (body.location ?? "").trim() || null;
 
   if (!name || !email || !phone) {
     return NextResponse.json({ ok: false, error: "Missing required fields" }, { status: 400 });
   }
 
-  // 1. Store the message so it always lands in the admin inbox, even if email
-  //    delivery is misconfigured.
+  // 1. Store the message (stamped with the clinic it came from) so it always
+  //    lands in the admin inbox, even if email delivery is misconfigured.
   const supabase = createPublicClient();
   const { error: dbError } = await supabase
     .from("messages")
-    .insert({ subject, name, email, phone, message });
+    .insert({ subject, name, email, phone, message, location });
 
-  // 2. Notify the clinic by email.
-  const settings = await getBlock("settings");
-  const to = process.env.CONTACT_TO_EMAIL || s(settings, "form_email") || s(settings, "email");
+  // 2. Notify the clinic by email — prefer the specific location's inbox.
+  const [settings, loc] = await Promise.all([
+    getBlock("settings"),
+    location ? getLocation(location) : Promise.resolve(null),
+  ]);
+  const to =
+    process.env.CONTACT_TO_EMAIL ||
+    loc?.form_email ||
+    loc?.email ||
+    s(settings, "form_email") ||
+    s(settings, "email");
 
   let emailed = false;
   if (to) {
     try {
-      emailed = await sendEmail({ to, name, email, phone, subject, message });
+      emailed = await sendEmail({
+        to,
+        name,
+        email,
+        phone,
+        subject: loc?.area ? `[${loc.area}] ${subject}` : subject,
+        message,
+      });
     } catch {
       emailed = false;
     }

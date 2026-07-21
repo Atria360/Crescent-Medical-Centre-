@@ -1,7 +1,8 @@
 import type { BlockData } from "@/lib/content";
 import { s } from "@/lib/content";
+import type { Location } from "@/lib/locations";
 
-export default function TopBar({ settings }: { settings: BlockData }) {
+export default function TopBar({ settings, location }: { settings: BlockData; location: Location }) {
   return (
     <div className="border-b border-gray-100 bg-white text-[13px] text-brand-dark">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2">
@@ -18,15 +19,14 @@ export default function TopBar({ settings }: { settings: BlockData }) {
         <div className="flex items-center gap-6">
           <span className="hidden items-center gap-2 md:flex">
             <PinIcon className="h-4 w-4 text-brand-dark" />
-            {s(settings, "address")}
+            {location.address}
           </span>
-          <a
-            href={`tel:${s(settings, "phone")}`}
-            className="flex items-center gap-2 font-semibold"
-          >
-            <PhoneIcon className="h-4 w-4 text-brand-dark" />
-            {s(settings, "phone")}
-          </a>
+          {location.phone ? (
+            <a href={`tel:${location.phone}`} className="flex items-center gap-2 font-semibold">
+              <PhoneIcon className="h-4 w-4 text-brand-dark" />
+              {location.phone}
+            </a>
+          ) : null}
         </div>
       </div>
     </div>

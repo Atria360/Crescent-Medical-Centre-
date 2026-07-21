@@ -13,10 +13,11 @@ interface Service {
   image_url: string;
 }
 
-export default async function ServicesPage() {
+export default async function ServicesPage({ params }: { params: Promise<{ location: string }> }) {
+  const { location } = await params;
   const [block, services] = await Promise.all([
-    getBlock("services_page"),
-    getCollection<Service>("services"),
+    getBlock("services_page", location),
+    getCollection<Service>("services", { location }),
   ]);
 
   return (

@@ -1,15 +1,20 @@
 import PageHero from "@/components/site/PageHero";
 import ContactForm from "@/components/site/ContactForm";
-import { getBlocks, s, list } from "@/lib/content";
+import { getBlock, s, list } from "@/lib/content";
+import { getLocation } from "@/lib/locations";
 
 export const revalidate = 60;
 
 export const metadata = { title: "Contact Us – Crescent Medical Centre" };
 
-export default async function ContactPage() {
-  const blocks = await getBlocks(["contact_page", "settings"]);
-  const block = blocks.contact_page;
-  const settings = blocks.settings;
+export default async function ContactPage({ params }: { params: Promise<{ location: string }> }) {
+  const { location } = await params;
+  const [block, loc] = await Promise.all([getBlock("contact_page", location), getLocation(location)]);
+  const mapSrc = loc?.map_embed_src ?? "";
+  const directions = loc?.directions_url ?? "";
+  const reviewsUrl =
+    loc?.google_reviews_url ||
+    "https://www.google.com/maps/search/?api=1&query=Crescent+Medical+Centre+Calgary";
 
   return (
     <>
@@ -38,7 +43,7 @@ export default async function ContactPage() {
             <h2 className="text-2xl">{s(block, "form_heading")}</h2>
             <p className="mt-3 text-sm text-brand-body">{s(block, "form_body")}</p>
             <div className="mt-7">
-              <ContactForm withSubject />
+              <ContactForm withSubject location={location} />
             </div>
           </div>
           <div
@@ -64,11 +69,7 @@ export default async function ContactPage() {
                 )}
               </p>
               <a
-                href={s(
-                  settings,
-                  "google_reviews_url",
-                  "https://www.google.com/maps/search/?api=1&query=Crescent+Medical+Centre+Calgary"
-                )}
+                href={reviewsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-teal mt-auto inline-flex items-center justify-center gap-2 self-start"
@@ -82,18 +83,18 @@ export default async function ContactPage() {
       </section>
 
       {/* Map */}
-      {s(settings, "map_embed_src") ? (
+      {mapSrc ? (
         <div className="relative">
           <iframe
-            src={s(settings, "map_embed_src")}
+            src={mapSrc}
             className="h-[420px] w-full border-0"
             loading="lazy"
             title="Clinic location map"
             referrerPolicy="no-referrer-when-downgrade"
           />
-          {s(settings, "directions_url") ? (
+          {directions ? (
             <a
-              href={s(settings, "directions_url")}
+              href={directions}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-red absolute bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap"

@@ -2,7 +2,27 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/config";
 
+// Legacy single-location URLs 301 → the primary clinic so old bookmarks / SEO
+// don't break after the move to /[location]/* routing.
+const PRIMARY_LOCATION = "westbrook";
+const LEGACY_PATHS = [
+  "/about-us",
+  "/our-team",
+  "/medical-services",
+  "/uninsured-services",
+  "/faq",
+  "/contact-us",
+  "/view-clinic",
+];
+
 export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname.replace(/\/+$/, "");
+  if (LEGACY_PATHS.includes(path)) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${PRIMARY_LOCATION}${path}`;
+    return NextResponse.redirect(url, 301);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -43,5 +63,14 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/about-us",
+    "/our-team",
+    "/medical-services",
+    "/uninsured-services",
+    "/faq",
+    "/contact-us",
+    "/view-clinic",
+  ],
 };

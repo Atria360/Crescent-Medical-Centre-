@@ -7,7 +7,13 @@ type Msg = { role: "user" | "assistant"; content: string };
 const GREETING =
   "Hi! 👋 I'm the Crescent Medical Centre assistant. Ask me about our hours, services, location, or booking an appointment.";
 
-export default function ChatWidget({ siteName = "Crescent Medical Centre" }: { siteName?: string }) {
+export default function ChatWidget({
+  siteName = "Crescent Medical Centre",
+  location,
+}: {
+  siteName?: string;
+  location?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([{ role: "assistant", content: GREETING }]);
   const [input, setInput] = useState("");
@@ -45,7 +51,7 @@ export default function ChatWidget({ siteName = "Crescent Medical Centre" }: { s
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // Send only the real conversation (skip the canned greeting).
-        body: JSON.stringify({ messages: next.slice(1) }),
+        body: JSON.stringify({ messages: next.slice(1), location }),
       });
       const data = (await res.json().catch(() => ({}))) as { reply?: string };
       setMessages((m) => [
