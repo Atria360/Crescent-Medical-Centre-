@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { getBlocks, getCollection, s, list } from "@/lib/content";
+import { getCollection } from "@/lib/content";
+import { getLocation, getPrimaryLocation, type Location } from "@/lib/locations";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,44 +16,44 @@ interface Service { title: string; description: string }
 interface TeamMember { name: string; credentials: string }
 interface Faq { question: string; answer: string }
 
-// Cache the assembled knowledge base briefly so a burst of chat traffic doesn't
-// hammer Supabase for the same content on every message.
-let cachedContext: { text: string; at: number } | null = null;
+// Cache each location's assembled knowledge base briefly so a burst of chat
+// traffic doesn't hammer Supabase for the same content on every message.
+const contextCache = new Map<string, { text: string; name: string; at: number }>();
 const CONTEXT_TTL_MS = 60_000;
 
-async function buildContext(): Promise<string> {
-  if (cachedContext && Date.now() - cachedContext.at < CONTEXT_TTL_MS) {
-    return cachedContext.text;
+async function resolveLocation(slug?: string): Promise<Location | null> {
+  if (slug) {
+    const loc = await getLocation(slug);
+    if (loc) return loc;
   }
+  return getPrimaryLocation();
+}
 
-  const [blocks, services, team, faqs] = await Promise.all([
-    getBlocks(["settings", "home_services", "uninsured_page"]),
-    getCollection<Service>("services"),
-    getCollection<TeamMember>("team_members"),
-    getCollection<Faq>("faqs"),
+async function buildContext(loc: Location): Promise<string> {
+  const cached = contextCache.get(loc.slug);
+  if (cached && Date.now() - cached.at < CONTEXT_TTL_MS) return cached.text;
+
+  const [services, team, faqs] = await Promise.all([
+    getCollection<Service>("services", { location: loc.slug }),
+    getCollection<TeamMember>("team_members", { location: loc.slug }),
+    getCollection<Faq>("faqs", { location: loc.slug }),
   ]);
-  const settings = blocks.settings;
 
-  const hours = list(settings, "hours")
-    .map((h) => h.line)
-    .filter(Boolean)
-    .join("; ");
+  const hours = (loc.hours ?? []).map((h) => h.line).filter(Boolean).join("; ");
 
   const parts: string[] = [];
-  parts.push(`Clinic: ${s(settings, "site_name", "Crescent Medical Centre")}`);
-  if (s(settings, "address")) parts.push(`Address: ${s(settings, "address")}`);
-  if (s(settings, "phone")) parts.push(`Phone: ${s(settings, "phone")}`);
-  if (s(settings, "toll_free")) parts.push(`Toll-free: ${s(settings, "toll_free")}`);
-  if (s(settings, "email")) parts.push(`Email: ${s(settings, "email")}`);
+  parts.push(`Clinic: ${loc.name} — ${loc.area} location`);
+  if (loc.address) parts.push(`Address: ${loc.address}`);
+  if (loc.phone) parts.push(`Phone: ${loc.phone}`);
+  if (loc.toll_free) parts.push(`Toll-free: ${loc.toll_free}`);
+  if (loc.email) parts.push(`Email: ${loc.email}`);
   if (hours) parts.push(`Hours: ${hours}`);
-  if (s(settings, "hours_note")) parts.push(`Hours note: ${s(settings, "hours_note")}`);
+  if (loc.hours_note) parts.push(`Hours note: ${loc.hours_note}`);
 
   if (services.length) {
     parts.push(
       "\nServices offered:\n" +
-        services
-          .map((x) => `- ${x.title}${x.description ? `: ${x.description}` : ""}`)
-          .join("\n")
+        services.map((x) => `- ${x.title}${x.description ? `: ${x.description}` : ""}`).join("\n")
     );
   }
   if (team.length) {
@@ -69,14 +70,14 @@ async function buildContext(): Promise<string> {
   }
 
   const text = parts.join("\n");
-  cachedContext = { text, at: Date.now() };
+  contextCache.set(loc.slug, { text, name: `${loc.name} — ${loc.area}`, at: Date.now() });
   return text;
 }
 
-function systemPrompt(context: string): string {
-  return `You are the friendly virtual assistant for Crescent Medical Centre, a family practice clinic in Calgary, Alberta. You answer questions from website visitors.
+function systemPrompt(clinic: string, context: string): string {
+  return `You are the friendly virtual assistant for ${clinic}, a family practice clinic in Calgary, Alberta. You answer questions from visitors to this specific clinic location's website.
 
-Use ONLY the clinic information below to answer. If the information needed isn't there, say you don't have that detail and invite the visitor to call the clinic or use the contact form — do not guess or make up hours, prices, doctors, or policies.
+Use ONLY the clinic information below to answer. If the information needed isn't there, say you don't have that detail and invite the visitor to call the clinic or use the contact form — do not guess or make up hours, prices, doctors, or policies. This information is for the ${clinic} location only; do not answer for any other location.
 
 Rules:
 - Be warm, concise, and helpful. Keep answers to a few sentences.
@@ -96,9 +97,9 @@ function fallbackReply(phone: string): string {
 }
 
 export async function POST(req: Request) {
-  let body: { messages?: ChatMessage[] };
+  let body: { messages?: ChatMessage[]; location?: string };
   try {
-    body = (await req.json()) as { messages?: ChatMessage[] };
+    body = (await req.json()) as { messages?: ChatMessage[]; location?: string };
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
@@ -115,19 +116,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No message provided" }, { status: 400 });
   }
 
+  const loc = await resolveLocation(body.location);
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    const blocks = await getBlocks(["settings"]);
-    return NextResponse.json({ reply: fallbackReply(s(blocks.settings, "phone")) });
+    return NextResponse.json({ reply: fallbackReply(loc?.phone ?? "") });
   }
 
   try {
-    const context = await buildContext();
+    if (!loc) throw new Error("no location");
+    const context = await buildContext(loc);
+    const clinic = `${loc.name} — ${loc.area}`;
     const client = new Anthropic({ apiKey });
     const response = await client.messages.create({
       model: MODEL,
       max_tokens: 1024,
-      system: [{ type: "text", text: systemPrompt(context), cache_control: { type: "ephemeral" } }],
+      system: [
+        { type: "text", text: systemPrompt(clinic, context), cache_control: { type: "ephemeral" } },
+      ],
       messages,
     });
 
@@ -139,7 +145,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ reply: reply || "Sorry, I didn't catch that — could you rephrase?" });
   } catch {
-    const blocks = await getBlocks(["settings"]);
-    return NextResponse.json({ reply: fallbackReply(s(blocks.settings, "phone")) });
+    return NextResponse.json({ reply: fallbackReply(loc?.phone ?? "") });
   }
 }

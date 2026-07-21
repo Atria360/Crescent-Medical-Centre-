@@ -15,10 +15,11 @@ interface TeamMember {
   photo_url: string;
 }
 
-export default async function TeamPage() {
+export default async function TeamPage({ params }: { params: Promise<{ location: string }> }) {
+  const { location } = await params;
   const [block, members] = await Promise.all([
-    getBlock("team_page"),
-    getCollection<TeamMember>("team_members"),
+    getBlock("team_page", location),
+    getCollection<TeamMember>("team_members", { location }),
   ]);
 
   const physicians = members.filter((m) => m.role === "physician");

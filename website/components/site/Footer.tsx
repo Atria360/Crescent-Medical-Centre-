@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { BlockData } from "@/lib/content";
 import { s, list } from "@/lib/content";
 import { mediaUrl } from "@/lib/config";
+import type { Location } from "@/lib/locations";
 
 const DEFAULT_SERVICES = [
   { label: "Medical Services", href: "/medical-services" },
@@ -16,33 +17,45 @@ const DEFAULT_QUICKLINKS = [
   { label: "FAQ", href: "/faq" },
 ];
 
-export default function Footer({ settings }: { settings: BlockData }) {
-  const hours = list(settings, "hours");
+// Prefix internal links with the location slug; leave external/anchor links alone.
+function locHref(slug: string, href: string): string {
+  if (!href || href === "/") return `/${slug}`;
+  if (href.startsWith("/")) return `/${slug}${href}`;
+  return href;
+}
+
+export default function Footer({ settings, location }: { settings: BlockData; location: Location }) {
+  const slug = location.slug;
+  const hours = location.hours ?? [];
   const services = list(settings, "footer_services");
   const quicklinks = list(settings, "footer_quicklinks");
   const servicesLinks = services.length ? services : DEFAULT_SERVICES;
   const quickLinks = quicklinks.length ? quicklinks : DEFAULT_QUICKLINKS;
-  const directions = s(settings, "directions_url");
+  const directions = location.directions_url;
 
   return (
     <footer className="bg-brand-dark text-gray-300">
       <div className="mx-auto max-w-7xl px-4 py-14">
         <div className="grid gap-10 md:grid-cols-4">
           <div>
-            {s(settings, "logo_white") ? (
+            {location.logo_white ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={mediaUrl(s(settings, "logo_white"))}
-                alt={s(settings, "site_name")}
+                src={mediaUrl(location.logo_white)}
+                alt={`${location.name} ${location.area}`}
                 className="mb-4 h-14 w-auto"
                 loading="lazy"
               />
-            ) : null}
+            ) : (
+              <p className="mb-4 text-lg font-bold text-white">
+                {location.name} <span className="text-teal">{location.area}</span>
+              </p>
+            )}
             <p className="text-sm leading-relaxed">{s(settings, "footer_tagline")}</p>
             <div className="mt-4 flex gap-3">
-              {s(settings, "facebook") && (
+              {location.facebook && (
                 <a
-                  href={s(settings, "facebook")}
+                  href={location.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Facebook"
@@ -51,9 +64,9 @@ export default function Footer({ settings }: { settings: BlockData }) {
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13 22v-8h3l.5-4H13V7.5c0-1.1.3-1.5 1.6-1.5H17V2.2C16.4 2.1 15.3 2 14.1 2 11.1 2 9 3.7 9 7v3H6v4h3v8h4Z"/></svg>
                 </a>
               )}
-              {s(settings, "instagram") && (
+              {location.instagram && (
                 <a
-                  href={s(settings, "instagram")}
+                  href={location.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram"
@@ -70,7 +83,7 @@ export default function Footer({ settings }: { settings: BlockData }) {
             <ul className="space-y-2 text-sm">
               {servicesLinks.map((l, i) => (
                 <li key={i}>
-                  <Link href={l.href || "/"} className="transition-colors hover:text-teal">{l.label}</Link>
+                  <Link href={locHref(slug, l.href || "/")} className="transition-colors hover:text-teal">{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -81,15 +94,20 @@ export default function Footer({ settings }: { settings: BlockData }) {
             <ul className="space-y-2 text-sm">
               {quickLinks.map((l, i) => (
                 <li key={i}>
-                  <Link href={l.href || "/"} className="transition-colors hover:text-teal">{l.label}</Link>
+                  <Link href={locHref(slug, l.href || "/")} className="transition-colors hover:text-teal">{l.label}</Link>
                 </li>
               ))}
+              <li>
+                <Link href="/" className="transition-colors hover:text-teal">All locations</Link>
+              </li>
             </ul>
           </div>
 
           <div>
-            <h6 className="mb-4 text-sm font-bold uppercase tracking-widest text-white">Locate Us</h6>
-            <p className="text-sm">{s(settings, "address")}</p>
+            <h6 className="mb-4 text-sm font-bold uppercase tracking-widest text-white">
+              Locate Us — {location.area}
+            </h6>
+            <p className="text-sm">{location.address}</p>
             {directions && (
               <a
                 href={directions}
@@ -101,17 +119,25 @@ export default function Footer({ settings }: { settings: BlockData }) {
                 Get Directions
               </a>
             )}
-            <p className="mt-3 text-sm">{s(settings, "hours_note")}</p>
-            <p className="mt-3 text-sm font-semibold text-white">Clinic Hours</p>
-            {hours.map((h, i) => (
-              <p key={i} className="text-sm">{h.line}</p>
-            ))}
-            <p className="mt-3 text-sm">
-              Phone: <a href={`tel:${s(settings, "phone")}`} className="hover:text-teal">{s(settings, "phone")}</a>
-            </p>
-            <p className="text-sm">
-              Toll Free: <a href={`tel:${s(settings, "toll_free")}`} className="hover:text-teal">{s(settings, "toll_free")}</a>
-            </p>
+            {location.hours_note && <p className="mt-3 text-sm">{location.hours_note}</p>}
+            {hours.length > 0 && (
+              <>
+                <p className="mt-3 text-sm font-semibold text-white">Clinic Hours</p>
+                {hours.map((h, i) => (
+                  <p key={i} className="text-sm">{h.line}</p>
+                ))}
+              </>
+            )}
+            {location.phone && (
+              <p className="mt-3 text-sm">
+                Phone: <a href={`tel:${location.phone}`} className="hover:text-teal">{location.phone}</a>
+              </p>
+            )}
+            {location.toll_free && (
+              <p className="text-sm">
+                Toll Free: <a href={`tel:${location.toll_free}`} className="hover:text-teal">{location.toll_free}</a>
+              </p>
+            )}
           </div>
         </div>
       </div>

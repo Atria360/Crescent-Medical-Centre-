@@ -29,6 +29,37 @@ export function TextField({
   );
 }
 
+export function ColorField({
+  label, value, onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const hex = /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#000000";
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-brand-gray">
+        {label}
+      </span>
+      <div className="flex items-center gap-3">
+        <input
+          type="color"
+          value={hex}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-10 w-14 shrink-0 cursor-pointer rounded-lg border border-gray-200 bg-white p-1"
+        />
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="#000000"
+          className={inputCls}
+        />
+      </div>
+    </label>
+  );
+}
+
 export function ImageField({
   label, value, onChange,
 }: {

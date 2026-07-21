@@ -6,10 +6,11 @@ export const revalidate = 60;
 
 export const metadata = { title: "FAQ – Crescent Medical Centre" };
 
-export default async function FaqPage() {
+export default async function FaqPage({ params }: { params: Promise<{ location: string }> }) {
+  const { location } = await params;
   const [block, faqs] = await Promise.all([
-    getBlock("faq_page"),
-    getCollection<FaqItem>("faqs"),
+    getBlock("faq_page", location),
+    getCollection<FaqItem>("faqs", { location }),
   ]);
 
   return (

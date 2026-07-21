@@ -5,9 +5,11 @@ import { useState } from "react";
 export default function ContactForm({
   withSubject = true,
   defaultSubject = "",
+  location,
 }: {
   withSubject?: boolean;
   defaultSubject?: string;
+  location?: string;
 }) {
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [form, setForm] = useState({
@@ -31,6 +33,7 @@ export default function ContactForm({
           email: form.email,
           phone: form.phone,
           message: form.message,
+          location,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean };

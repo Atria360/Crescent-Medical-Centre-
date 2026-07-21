@@ -4,36 +4,71 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { BlockSchema, Field } from "@/lib/cms-schemas";
 import { TextField, ImageField } from "./fields";
+import { useAdminLocation } from "./LocationContext";
 
 type Data = Record<string, unknown>;
 
 export default function BlockEditor({ schema }: { schema: BlockSchema }) {
+  const { currentSlug, isPrimary, ready } = useAdminLocation();
   const [data, setData] = useState<Data | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [inherited, setInherited] = useState(false);
+
+  // Global blocks use the bare key; the primary location uses the bare key;
+  // other locations namespace the key by slug (falling back to the shared copy).
+  const effectiveKey = schema.global || isPrimary ? schema.key : `${currentSlug}:${schema.key}`;
 
   useEffect(() => {
+    if (!ready) return;
+    let active = true;
+    setData(null);
+    setInherited(false);
     const supabase = createClient();
-    supabase
-      .from("content_blocks")
-      .select("data")
-      .eq("key", schema.key)
-      .maybeSingle()
-      .then(({ data: row }) => setData((row?.data as Data) ?? {}));
-  }, [schema.key]);
+    (async () => {
+      const { data: row } = await supabase
+        .from("content_blocks")
+        .select("data")
+        .eq("key", effectiveKey)
+        .maybeSingle();
+      if (!active) return;
+      if (row?.data) {
+        setData(row.data as Data);
+        return;
+      }
+      // Non-primary location with no custom copy yet → prefill from the shared block.
+      if (!schema.global && !isPrimary) {
+        const { data: base } = await supabase
+          .from("content_blocks")
+          .select("data")
+          .eq("key", schema.key)
+          .maybeSingle();
+        if (!active) return;
+        setData((base?.data as Data) ?? {});
+        setInherited(Boolean(base?.data));
+        return;
+      }
+      setData({});
+    })();
+    return () => {
+      active = false;
+    };
+  }, [effectiveKey, ready, schema.global, schema.key, isPrimary]);
 
   async function save() {
     if (!data) return;
     setSaving(true);
     setError("");
     const supabase = createClient();
+    const label = schema.global || isPrimary ? schema.label : `${schema.label} — ${currentSlug}`;
     const { error } = await supabase
       .from("content_blocks")
-      .upsert({ key: schema.key, label: schema.label, data, updated_at: new Date().toISOString() });
+      .upsert({ key: effectiveKey, label, data, updated_at: new Date().toISOString() });
     if (error) setError(error.message);
     else {
       setSaved(true);
+      setInherited(false);
       setTimeout(() => setSaved(false), 2500);
     }
     setSaving(false);
@@ -45,6 +80,16 @@ export default function BlockEditor({ schema }: { schema: BlockSchema }) {
 
   return (
     <div className="max-w-3xl">
+      {schema.global ? (
+        <p className="mb-6 rounded-lg bg-teal/10 px-4 py-2.5 text-sm text-teal">
+          Shared across all locations.
+        </p>
+      ) : inherited ? (
+        <p className="mb-6 rounded-lg bg-amber-50 px-4 py-2.5 text-sm text-amber-700">
+          Showing the shared copy from the primary location. Edit and save to give{" "}
+          <b>{currentSlug}</b> its own version.
+        </p>
+      ) : null}
       <div className="space-y-6">
         {schema.fields.map((field) => (
           <FieldEditor

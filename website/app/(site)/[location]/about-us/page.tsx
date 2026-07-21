@@ -12,10 +12,11 @@ interface Testimonial {
 
 export const metadata = { title: "About Us – Crescent Medical Centre" };
 
-export default async function AboutPage() {
+export default async function AboutPage({ params }: { params: Promise<{ location: string }> }) {
+  const { location } = await params;
   const [block, testimonials] = await Promise.all([
-    getBlock("about_page"),
-    getCollection<Testimonial>("testimonials"),
+    getBlock("about_page", location),
+    getCollection<Testimonial>("testimonials", { location }),
   ]);
 
   return (

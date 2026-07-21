@@ -12,10 +12,11 @@ interface GalleryImage {
   caption: string;
 }
 
-export default async function GalleryPage() {
+export default async function GalleryPage({ params }: { params: Promise<{ location: string }> }) {
+  const { location } = await params;
   const [block, images] = await Promise.all([
-    getBlock("gallery_page"),
-    getCollection<GalleryImage>("gallery_images"),
+    getBlock("gallery_page", location),
+    getCollection<GalleryImage>("gallery_images", { location }),
   ]);
 
   return (

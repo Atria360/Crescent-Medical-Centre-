@@ -17,10 +17,11 @@ interface FeeItem {
   cost: string;
 }
 
-export default async function UninsuredPage() {
+export default async function UninsuredPage({ params }: { params: Promise<{ location: string }> }) {
+  const { location } = await params;
   const [block, sections, items] = await Promise.all([
-    getBlock("uninsured_page"),
-    getCollection<FeeSection>("fee_sections"),
+    getBlock("uninsured_page", location),
+    getCollection<FeeSection>("fee_sections", { location }),
     getCollection<FeeItem>("fee_items"),
   ]);
 

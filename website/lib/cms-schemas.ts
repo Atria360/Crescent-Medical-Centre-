@@ -2,7 +2,7 @@
 // Every content block (site section) and collection is described here;
 // the admin panel renders forms straight from these definitions.
 
-export type FieldType = "text" | "textarea" | "image" | "list";
+export type FieldType = "text" | "textarea" | "image" | "list" | "color";
 
 export interface Field {
   name: string;
@@ -17,31 +17,49 @@ export interface BlockSchema {
   key: string;
   label: string;
   group: "Global" | "Home" | "About" | "Pages";
+  // Global blocks (e.g. site settings) are shared across all locations and
+  // always stored under the bare key; per-location blocks use a slug namespace.
+  global?: boolean;
   fields: Field[];
 }
+
+// Fields for the per-location branding/contact record (the `locations` table).
+export const LOCATION_FIELDS: Field[] = [
+  { name: "area", label: "Location name / area", type: "text" },
+  { name: "tagline", label: "Tagline / one-liner", type: "text" },
+  { name: "logo", label: "Header logo", type: "image" },
+  { name: "logo_white", label: "Footer / dark-bg logo (white)", type: "image" },
+  { name: "hero_image", label: "Chooser hero image", type: "image" },
+  { name: "color_primary", label: "Primary color", type: "color" },
+  { name: "color_primary_dark", label: "Primary color (dark / hover)", type: "color" },
+  { name: "color_accent", label: "Accent color", type: "color" },
+  { name: "color_accent_dark", label: "Accent color (dark / hover)", type: "color" },
+  { name: "color_gold", label: "Highlight / gold color", type: "color" },
+  { name: "phone", label: "Phone", type: "text" },
+  { name: "toll_free", label: "Toll-free", type: "text" },
+  { name: "email", label: "Email", type: "text" },
+  { name: "form_email", label: "Contact form recipient email", type: "text" },
+  { name: "address", label: "Address", type: "text" },
+  { name: "map_embed_src", label: "Google Maps embed URL", type: "textarea" },
+  { name: "directions_url", label: "Google Maps directions link", type: "text" },
+  { name: "google_reviews_url", label: "Google review link", type: "text" },
+  { name: "facebook", label: "Facebook URL", type: "text" },
+  { name: "instagram", label: "Instagram URL", type: "text" },
+  {
+    name: "hours", label: "Clinic hours", type: "list",
+    of: [{ name: "line", label: "Line", type: "text" }],
+  },
+  { name: "hours_note", label: "Hours note", type: "text" },
+];
 
 export const BLOCK_SCHEMAS: BlockSchema[] = [
   {
     key: "settings",
-    label: "Site Settings",
+    label: "Site Settings (shared)",
     group: "Global",
+    global: true,
     fields: [
       { name: "site_name", label: "Site name", type: "text" },
-      { name: "logo", label: "Header logo", type: "image" },
-      { name: "logo_white", label: "Footer logo (white)", type: "image" },
-      { name: "phone", label: "Phone", type: "text" },
-      { name: "toll_free", label: "Toll-free", type: "text" },
-      { name: "email", label: "Email", type: "text" },
-      { name: "address", label: "Address", type: "text" },
-      { name: "map_embed_src", label: "Google Maps embed URL", type: "textarea" },
-      { name: "directions_url", label: "Google Maps directions link", type: "text" },
-      { name: "facebook", label: "Facebook URL", type: "text" },
-      { name: "instagram", label: "Instagram URL", type: "text" },
-      {
-        name: "hours", label: "Clinic hours", type: "list",
-        of: [{ name: "line", label: "Line", type: "text" }],
-      },
-      { name: "hours_note", label: "Hours note", type: "text" },
       { name: "topbar_left_1", label: "Top bar item 1", type: "text" },
       { name: "topbar_left_2", label: "Top bar item 2", type: "text" },
       { name: "footer_tagline", label: "Footer tagline", type: "textarea" },
@@ -60,8 +78,6 @@ export const BLOCK_SCHEMAS: BlockSchema[] = [
         ],
       },
       { name: "copyright", label: "Copyright line", type: "text" },
-      { name: "google_reviews_url", label: "Google review link", type: "text" },
-      { name: "form_email", label: "Contact form recipient email", type: "text" },
     ],
   },
   {

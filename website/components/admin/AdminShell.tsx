@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { BLOCK_SCHEMAS, COLLECTION_SCHEMAS } from "@/lib/cms-schemas";
+import { useAdminLocation } from "./LocationContext";
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { locations, currentSlug, setLocation } = useAdminLocation();
 
   async function signOut() {
     const supabase = createClient();
@@ -31,9 +33,36 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <Link href="/admin" className="px-3 text-lg font-bold text-white">
           Crescent CMS
         </Link>
+
+        {locations.length > 0 && (
+          <div className="mt-4 rounded-lg bg-white/5 p-3">
+            <label className="block px-1 pb-1 text-[11px] font-bold uppercase tracking-widest text-gray-500">
+              Editing location
+            </label>
+            <select
+              value={currentSlug}
+              onChange={(e) => setLocation(e.target.value)}
+              className="w-full rounded-md border border-white/20 bg-brand-dark px-2 py-2 text-sm font-bold text-white outline-none focus:border-teal"
+            >
+              {locations.map((l) => (
+                <option key={l.slug} value={l.slug}>
+                  {l.area}
+                  {l.is_primary ? " (primary)" : ""}
+                </option>
+              ))}
+            </select>
+            <p className="px-1 pt-1.5 text-[11px] leading-snug text-gray-500">
+              Page sections &amp; collections you edit below apply to this location.
+            </p>
+          </div>
+        )}
+
         <nav className="mt-6 flex-1 space-y-6 overflow-y-auto pb-6">
           <div>
             <Link href="/admin" className={linkCls("/admin")}>Dashboard</Link>
+            <Link href="/admin/locations" className={linkCls("/admin/locations")}>
+              Locations &amp; branding
+            </Link>
             <Link href="/admin/messages" className={linkCls("/admin/messages")}>
               Messages (Inbox)
             </Link>

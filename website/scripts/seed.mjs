@@ -223,6 +223,40 @@ for (const [key, data] of Object.entries(blocks)) {
   else console.log(`  block ${key}`);
 }
 
+// ---------- 2b. locations (per-location branding + contact) ----------
+// The `locations` table itself is created by DB migration; this seeds the rows.
+// Westbrook draws its contact/branding from the settings block above; Downtown
+// gets its palette + address (logo/hours/phone are filled in via the admin).
+{
+  const st = blocks.settings;
+  const locations = [
+    {
+      slug: "westbrook", name: "Crescent Medical Centre", area: "Westbrook", is_primary: true, sort: 1,
+      logo: st.logo ?? "", logo_white: st.logo_white ?? "",
+      color_primary: "#3BC4BD", color_primary_dark: "#2FA8A2",
+      color_accent: "#E22004", color_accent_dark: "#C51C03", color_gold: "",
+      phone: st.phone ?? "", toll_free: st.toll_free ?? "", email: st.email ?? "",
+      address: st.address ?? "", map_embed_src: st.map_embed_src ?? "", directions_url: st.directions_url ?? "",
+      hours: st.hours ?? [], hours_note: st.hours_note ?? "",
+      facebook: st.facebook ?? "", instagram: st.instagram ?? "",
+      tagline: "Trusted family practice & walk-in clinic in southwest Calgary", hero_image: "",
+      google_reviews_url: st.google_reviews_url ?? "", form_email: st.form_email ?? st.email ?? "",
+    },
+    {
+      slug: "downtown", name: "Crescent Medical Centre", area: "Downtown", is_primary: false, sort: 2,
+      color_primary: "#06645D", color_primary_dark: "#04544E",
+      color_accent: "#0186E6", color_accent_dark: "#012054", color_gold: "#F2C455",
+      address: "150-909 5 Avenue SW, Calgary, AB",
+      tagline: "Now open in the heart of downtown Calgary",
+      hours: [{ line: "Monday - Friday 9 am - 6 pm" }, { line: "Saturday - 10 am - 3 pm" }],
+      hours_note: "Walk-ins welcome. Please call ahead to confirm hours during our opening period.",
+    },
+  ];
+  const { error } = await supabase.from("locations").upsert(locations);
+  if (error) console.error(`  locations FAILED: ${error.message}`);
+  else console.log(`  locations x${locations.length}`);
+}
+
 // ---------- 3. services ----------
 const services = [
   ["Routine Appointments", "Your regular check-ins for ongoing health maintenance", "Routine-Appointments-min.jpg", true],
@@ -246,7 +280,7 @@ const services = [
 {
   const rows = services.map(([title, description, file, featured], i) => ({
     title, description, featured, sort: i + 1,
-    image_url: img(file),
+    image_url: img(file), location: "westbrook",
   }));
   const { error } = await supabase.from("services").insert(rows);
   console.log(error ? `  services FAILED: ${error.message}` : `  services x${rows.length}`);
@@ -287,6 +321,7 @@ const team = [
 {
   const rows = team.map(([name, credentials, role, bio, file, featured], i) => ({
     name, credentials, role, bio, featured, sort: i + 1, photo_url: img(file),
+    location: "westbrook",
   }));
   const { error } = await supabase.from("team_members").insert(rows);
   console.log(error ? `  team FAILED: ${error.message}` : `  team x${rows.length}`);
@@ -309,7 +344,7 @@ const faqs = [
   ["What if I can't make an appointment?", "If you can't make your appointment, kindly notify us 24 hours beforehand. A fee may apply for last-minute cancellations or missed appointments — see our Uninsured Services page for details."],
 ];
 {
-  const rows = faqs.map(([question, answer], i) => ({ question, answer, sort: i + 1 }));
+  const rows = faqs.map(([question, answer], i) => ({ question, answer, sort: i + 1, location: "westbrook" }));
   const { error } = await supabase.from("faqs").insert(rows);
   console.log(error ? `  faqs FAILED: ${error.message}` : `  faqs x${rows.length}`);
 }
@@ -363,7 +398,7 @@ const feeTables = [
 for (let sIdx = 0; sIdx < feeTables.length; sIdx++) {
   const [title, items] = feeTables[sIdx];
   const { data: section, error: se } = await supabase
-    .from("fee_sections").insert({ title, sort: sIdx + 1 }).select().single();
+    .from("fee_sections").insert({ title, sort: sIdx + 1, location: "westbrook" }).select().single();
   if (se) { console.error(`  fee section FAILED: ${se.message}`); continue; }
   const rows = items.map(([service, cost], i) => ({ section_id: section.id, service, cost, sort: i + 1 }));
   const { error } = await supabase.from("fee_items").insert(rows);
@@ -379,7 +414,7 @@ for (let sIdx = 0; sIdx < feeTables.length; sIdx++) {
     "JasperArt_2023-11-10_14.35.19_upscaled.jpg",
     "JasperArt_2023-11-10_14.42.12_upscaled.jpg",
   ];
-  const rows = files.map((f, i) => ({ image_url: img(f), caption: "", sort: i + 1 }));
+  const rows = files.map((f, i) => ({ image_url: img(f), caption: "", sort: i + 1, location: "westbrook" }));
   const { error } = await supabase.from("gallery_images").insert(rows);
   console.log(error ? `  gallery FAILED: ${error.message}` : `  gallery x${rows.length}`);
 }
@@ -387,9 +422,9 @@ for (let sIdx = 0; sIdx < feeTables.length; sIdx++) {
 // ---------- 8. testimonials ----------
 {
   const rows = [
-    { name: "Sarah Johnson", quote: "Crescent Medical Centre has been my go-to for years. The caring staff and top-notch care have kept my family healthy and happy. We couldn't be more grateful.", sort: 1 },
-    { name: "David Wong", quote: "I'm so impressed with the convenience and professionalism at Crescent Medical Centre. Their walk-in service saved me time, and their doctors truly care about their patients' well-being.", sort: 2 },
-    { name: "Emily Anderson", quote: "Choosing Crescent was the best decision for my health. They've provided expert care and have always made me feel like family. Highly recommend!", sort: 3 },
+    { name: "Sarah Johnson", quote: "Crescent Medical Centre has been my go-to for years. The caring staff and top-notch care have kept my family healthy and happy. We couldn't be more grateful.", sort: 1, location: "westbrook" },
+    { name: "David Wong", quote: "I'm so impressed with the convenience and professionalism at Crescent Medical Centre. Their walk-in service saved me time, and their doctors truly care about their patients' well-being.", sort: 2, location: "westbrook" },
+    { name: "Emily Anderson", quote: "Choosing Crescent was the best decision for my health. They've provided expert care and have always made me feel like family. Highly recommend!", sort: 3, location: "westbrook" },
   ];
   const { error } = await supabase.from("testimonials").insert(rows);
   console.log(error ? `  testimonials FAILED: ${error.message}` : `  testimonials x${rows.length}`);
