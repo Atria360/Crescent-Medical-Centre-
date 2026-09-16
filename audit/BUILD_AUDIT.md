@@ -101,16 +101,21 @@ The `media` bucket compounds it: `file_size_limit: null`, `allowed_mime_types: n
 
 **Fix:** turn off public sign-up (Dashboard → Authentication → Sign In / Providers → disable "Allow new users to sign up") and create staff accounts by invitation. Then, defence in depth: add an `admins` table (or a JWT claim) and re-scope every policy from `authenticated` to "is an admin", set a `file_size_limit` and an image-only `allowed_mime_types` on the bucket, and have the middleware check admin status rather than mere authentication.
 
-### S1-2 · The Downtown clinic advertises the Westbrook clinic's doctors, fees and phone number
+### S1-2 · The Downtown clinic advertises Westbrook's fees, services and phone number
 
-Downtown's collections are an exact clone of Westbrook's — same 7 physicians, same supervisor, same 5 medical assistants, same 17 services, same 13 FAQs, same 3 fee tables, same gallery, same testimonials. Two concrete consequences on the live site today:
+**Partially resolved 2026-09-16 — the team roster is fixed; the rest still stands.**
 
-- `/downtown/our-team` lists all seven Westbrook physicians with bios, implying they practise downtown.
+Downtown's collections were seeded as an exact clone of Westbrook's — same 7 physicians, same supervisor, same 5 medical assistants, same 17 services, same 13 FAQs, same 3 fee tables, same gallery, same testimonials.
+
+*Fixed:* `team_members` for `location = 'downtown'` now holds the real Downtown roster — Dr. Amira Sultana Imdadullah and Dr. Ibrahim Sadiq. The six other Westbrook physicians, the supervisor and the five medical assistants were removed (Westbrook's own rows are untouched). Dr. Sadiq's photograph is still outstanding, so his card renders the placeholder tile until it is uploaded.
+
+*Still outstanding:* `services`, `faqs`, `fee_sections`/`fee_items`, `gallery_images` and `testimonials` remain byte-for-byte clones of Westbrook's. The sharpest consequence:
+
 - `/downtown/faq` → "How do I schedule an appointment?" answers **"call us at 587-318-1608 or emailtocrescent@gmail.com"** — Westbrook's number and inbox, on the Downtown site, directly contradicting the Downtown header/footer which show `825 395 4309` and `info@crescentmedical.ca`.
 
 The page-section blocks *were* localised properly (Downtown's About copy correctly describes 909 5 Avenue SW and the CTrain), which makes the un-localised collections stand out more, not less.
 
-**Fix:** before Downtown is promoted anywhere, have the clinic confirm the real Downtown roster, service list and fee schedule, then prune `team_members`, `faqs`, `services`, `fee_sections`/`fee_items`, `gallery_images` and `testimonials` for `location = 'downtown'`. Where content genuinely is shared (most FAQs), edit the two answers that hard-code Westbrook contact details.
+**Fix:** have the clinic confirm Downtown's real service list and fee schedule, then prune those collections for `location = 'downtown'`. Where content genuinely is shared (most FAQs), edit the answers that hard-code Westbrook contact details.
 
 ### S1-3 · The largest fee table is missing from both locations
 
@@ -199,7 +204,7 @@ Worth saying plainly, because most of this build is solid:
 ## 5. Recommended order of work
 
 1. Disable public sign-up on Supabase — one dashboard toggle, closes S1-1's exploitable half today.
-2. Fix Downtown's cloned roster, FAQs and contact details (S1-2), and restore the missing fee table (S1-3).
+2. Downtown's cloned roster is fixed (2026-09-16). Still to do: its cloned services, FAQs, fees, gallery and testimonials, the two FAQ answers hard-coding Westbrook's contact details (S1-2), and the missing fee table (S1-3).
 3. Decide the brand question (S2-1); if the new identity wins, it's a logo upload and five colour fields per location.
 4. Location-aware page metadata (S2-2) and `robots.ts` (S3-2).
 5. Replace placeholder testimonials and AI gallery images (S2-3).
