@@ -128,9 +128,13 @@ export async function sendEnquiry(to: string[], e: Enquiry): Promise<DeliveryRes
  */
 async function sendViaSmtp(to: string[], e: Enquiry): Promise<DeliveryResult> {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
-  const port = Number(process.env.SMTP_PORT || 465);
+  // Gmail's submission port is 465 (implicit TLS). Microsoft 365 and most
+  // other hosts only accept 587 (STARTTLS) — defaulting a custom host to 465
+  // would just hang, so pick 587 for anything that isn't Gmail.
+  const port = Number(process.env.SMTP_PORT || (host === "smtp.gmail.com" ? 465 : 587));
   const user = process.env.SMTP_USER as string;
   const pass = process.env.SMTP_PASS as string;
+  const implicitTls = port === 465;
 
   try {
     // Imported lazily so the module stays usable (and bundlable) when no SMTP
@@ -139,16 +143,21 @@ async function sendViaSmtp(to: string[], e: Enquiry): Promise<DeliveryResult> {
     const transport = nodemailer.createTransport({
       host,
       port,
-      secure: port === 465,
+      secure: implicitTls,
+      // On 587/25 the session starts in the clear and upgrades. requireTLS
+      // makes that upgrade mandatory, so the password can never be sent over
+      // an unencrypted connection if a server fails to offer STARTTLS.
+      requireTLS: !implicitTls,
       auth: { user, pass },
+      tls: { minVersion: "TLSv1.2" },
       connectionTimeout: SEND_TIMEOUT_MS,
       greetingTimeout: SEND_TIMEOUT_MS,
       socketTimeout: SEND_TIMEOUT_MS,
     });
 
     const info = await transport.sendMail({
-      // Gmail rewrites From to the authenticated account unless the address is
-      // a verified alias, so default to the account itself.
+      // Gmail and Microsoft 365 both rewrite (or reject) a From that isn't the
+      // authenticated account or a verified alias, so default to the account.
       from: process.env.SMTP_FROM || `Crescent Medical Centre <${user}>`,
       to,
       replyTo: e.email,
@@ -186,14 +195,27 @@ async function sendViaSmtp(to: string[], e: Enquiry): Promise<DeliveryResult> {
 /** Turn nodemailer/Node socket errors into something a clinic admin can act on. */
 function smtpErrText(err: unknown): string {
   const code = (err as { code?: string })?.code;
-  const response = (err as { response?: string })?.response;
+  const response = (err as { response?: string })?.response ?? "";
   const base = errText(err);
+  const detail = `${base} ${response}`.toLowerCase();
 
   if (code === "EAUTH") {
-    return `${base} — check SMTP_USER and SMTP_PASS. Gmail needs a 16-character App Password with 2-Step Verification enabled, not the normal account password.`;
+    // Microsoft 365 is retiring Basic auth for SMTP AUTH, and says so in the
+    // response. Name that specifically — it is not a wrong-password problem
+    // and retyping the password will never fix it.
+    if (detail.includes("smtpclientauthentication") || detail.includes("disabled for the tenant")) {
+      return `${base} — Microsoft 365 has SMTP AUTH switched off for this mailbox or tenant. An admin must enable "Authenticated SMTP" for the mailbox (Microsoft 365 admin centre → Users → Mail → Manage email apps), and the tenant-wide setting must allow it.`;
+    }
+    if (detail.includes("basic authentication") || detail.includes("basic auth")) {
+      return `${base} — Microsoft 365 has disabled Basic authentication for SMTP. Either re-enable it for this mailbox, or send through a different mailbox (the sending account does not have to be the one that receives).`;
+    }
+    return `${base} — check SMTP_USER and SMTP_PASS. Gmail needs a 16-character App Password with 2-Step Verification enabled, not the normal account password. Microsoft 365 needs Authenticated SMTP enabled for the mailbox.`;
   }
   if (code === "ETIMEDOUT" || code === "ESOCKET" || code === "ECONNECTION") {
-    return `${base} — could not reach the mail server. Confirm the host and port, and that outbound SMTP is permitted from the host.`;
+    return `${base} — could not reach the mail server. Confirm the host and port (Gmail 465, Microsoft 365 smtp.office365.com:587), and that outbound SMTP is permitted from the host.`;
+  }
+  if (code === "EENVELOPE") {
+    return `${base} — the server refused the sender or recipient. If SMTP_FROM is set, it must be the authenticated mailbox or one of its verified aliases.`;
   }
   return response ? `${base} (${response})` : base;
 }

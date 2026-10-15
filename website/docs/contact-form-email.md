@@ -39,46 +39,84 @@ Three ways to send, tried in this order. The first one configured is used.
 
 This is the "WP Mail SMTP" approach: the clinic's **own mailbox** does the
 sending, so patient details never pass through an outside service. Works with
-Gmail, Google Workspace, Outlook, or any host that speaks SMTP.
+Gmail, Microsoft 365 / Outlook, or any host that speaks SMTP.
 
 Set these in Vercel → Project → Settings → Environment Variables:
 
 | Variable | Value |
 |---|---|
-| `SMTP_USER` | the full mailbox address, e.g. `emailtocrescent@gmail.com` |
-| `SMTP_PASS` | the **16-character App Password** (see below) — not the account password |
+| `SMTP_USER` | the full mailbox address |
+| `SMTP_PASS` | the mailbox password or app password (see per-provider notes) |
 | `SMTP_HOST` | optional, defaults to `smtp.gmail.com` |
-| `SMTP_PORT` | optional, defaults to `465` |
+| `SMTP_PORT` | optional; defaults to `465` for Gmail, `587` for any other host |
 | `SMTP_FROM` | optional display name/address, defaults to `Crescent Medical Centre <SMTP_USER>` |
 
-**Getting a Gmail App Password**
+One mailbox sends for **all** locations; each location's `form_email` still
+controls *who receives*. **The sending mailbox does not have to be a receiving
+one** — this is the escape hatch if one provider won't cooperate.
+
+#### Gmail / Google Workspace
+
+| | |
+|---|---|
+| `SMTP_HOST` | `smtp.gmail.com` (default) |
+| `SMTP_PORT` | `465` (default, implicit TLS) |
+| `SMTP_PASS` | a **16-character App Password** |
 
 1. Google account → **Security** → turn on **2-Step Verification** (required —
    App Passwords are not offered without it).
 2. Same page → **App passwords** → create one named e.g. "Clinic website".
-3. Copy the 16-character code and paste it into `SMTP_PASS` (spaces optional).
+3. Paste the 16-character code into `SMTP_PASS`.
 
-**Notes**
+Limits: roughly 500 recipients/day on free Gmail, 2,000/day on Workspace.
 
-- Port 465 is implicit TLS, so the password is never sent in the clear. Port 587
-  (STARTTLS) also works.
-- Gmail rewrites the `From:` header to the authenticated account unless the
-  address is a verified alias — so the mail arrives *from* the clinic mailbox.
-  `Reply-To` is set to the patient, so staff can just hit Reply.
-- One mailbox does the sending for **all** locations; each location's
-  `form_email` still controls *who receives* it. You do not need separate
-  credentials per clinic.
-- Free Gmail allows roughly 500 recipients/day; Google Workspace 2,000/day.
-  Far above what a clinic contact form generates.
+#### Microsoft 365 / Outlook (domain email)
+
+| | |
+|---|---|
+| `SMTP_HOST` | `smtp.office365.com` |
+| `SMTP_PORT` | `587` (STARTTLS — Microsoft does **not** support 465) |
+| `SMTP_USER` | the full mailbox address, e.g. `info@crescentmedical.ca` |
+| `SMTP_PASS` | the mailbox password, or an app password if MFA is on |
+
+**Authenticated SMTP must be enabled for that mailbox**, in two places:
+
+1. Microsoft 365 admin centre → **Users** → *the user* → **Mail** →
+   **Manage email apps** → tick **Authenticated SMTP**.
+2. The tenant-wide setting must not block it
+   (`Set-TransportConfig -SmtpClientAuthenticationDisabled $false`).
+
+> **⚠️ This has a deadline.** Microsoft is retiring Basic authentication for
+> SMTP AUTH client submission. The timeline has slipped repeatedly — most
+> recently to **Basic auth being switched off by default at the end of
+> December 2026**, with admins still able to re-enable it, and a final removal
+> date to be announced in the second half of 2027. Check **MC786329** in your
+> own Message Center for the dates that apply to your tenant, since these have
+> moved more than once.
+>
+> Practical options when that lands: re-enable it for this one mailbox, switch
+> to OAuth2, or — simplest — **send through a Gmail/Workspace mailbox while
+> still delivering to the Outlook address**. The form only needs *some*
+> mailbox to send; the recipient stays whatever you set per location.
+
+#### Security notes
+
+- Port 465 uses implicit TLS. Port 587 starts in the clear and upgrades, so
+  the code sets `requireTLS` — if a server refuses STARTTLS the send **fails**
+  rather than transmitting the password or patient details unencrypted. This is
+  tested.
+- TLS 1.2 is the enforced minimum (Microsoft 365 requires it).
+- `SMTP_FROM` must be the authenticated mailbox or a verified alias; both Gmail
+  and Microsoft 365 rewrite or reject anything else.
 - Requires outbound TCP, so the route runs on the Node.js runtime
-  (`export const runtime = "nodejs"` in `app/api/contact/route.ts`). It would
-  not work on Vercel's Edge runtime.
+  (`export const runtime = "nodejs"`). It would not work on Vercel's Edge runtime.
 
 ### 2. Resend
 
 Set `RESEND_API_KEY`, plus `CONTACT_FROM_EMAIL` once a sending domain is
 verified. Used only when no SMTP credentials are set. Free tier available;
-a paid plan and a verified domain are needed for real volume.
+a paid plan and a verified domain are needed for real volume. Worth keeping in
+mind as the fallback if Microsoft's Basic-auth retirement closes off option 1.
 
 ### 3. FormSubmit — zero-config fallback
 
