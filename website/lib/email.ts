@@ -69,7 +69,7 @@ export interface DeliveryResult {
   /** Addresses the provider accepted (or was asked to deliver to). */
   deliveredTo: string[];
   error: string;
-  provider: "resend" | "formsubmit" | "none";
+  provider: "smtp" | "resend" | "formsubmit" | "none";
 }
 
 const SEND_TIMEOUT_MS = 10_000;
@@ -105,9 +105,97 @@ export async function sendEnquiry(to: string[], e: Enquiry): Promise<DeliveryRes
     };
   }
 
+  // Direct SMTP first: it sends from the clinic's own mailbox, so no third
+  // party ever holds the patient's details. Resend and FormSubmit remain as
+  // alternatives for whoever deploys this.
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) return sendViaSmtp(to, e);
+
   const resendKey = process.env.RESEND_API_KEY;
   if (resendKey) return sendViaResend(resendKey, to, e);
   return sendViaFormSubmit(to, e);
+}
+
+/**
+ * Send through an ordinary SMTP mailbox — Gmail, Google Workspace, or any host
+ * that speaks SMTP. This is the "WP Mail SMTP" approach: the clinic's own
+ * account does the sending, nothing is relayed through a third-party service.
+ *
+ * For Gmail, SMTP_PASS must be a 16-character App Password (Google account →
+ * Security → 2-Step Verification → App passwords), not the account password.
+ *
+ * Port 465 is the default and uses implicit TLS, so credentials are never sent
+ * over an unencrypted connection. Port 587 upgrades via STARTTLS.
+ */
+async function sendViaSmtp(to: string[], e: Enquiry): Promise<DeliveryResult> {
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = Number(process.env.SMTP_PORT || 465);
+  const user = process.env.SMTP_USER as string;
+  const pass = process.env.SMTP_PASS as string;
+
+  try {
+    // Imported lazily so the module stays usable (and bundlable) when no SMTP
+    // credentials are configured.
+    const nodemailer = (await import("nodemailer")).default;
+    const transport = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+      connectionTimeout: SEND_TIMEOUT_MS,
+      greetingTimeout: SEND_TIMEOUT_MS,
+      socketTimeout: SEND_TIMEOUT_MS,
+    });
+
+    const info = await transport.sendMail({
+      // Gmail rewrites From to the authenticated account unless the address is
+      // a verified alias, so default to the account itself.
+      from: process.env.SMTP_FROM || `Crescent Medical Centre <${user}>`,
+      to,
+      replyTo: e.email,
+      subject: subjectLine(e),
+      text: body(e),
+    });
+
+    const accepted = (info.accepted ?? []).map(String).filter(Boolean);
+    const rejected = (info.rejected ?? []).map(String).filter(Boolean);
+
+    if (accepted.length === 0) {
+      return {
+        delivered: false,
+        deliveredTo: [],
+        error: `The mail server rejected every recipient${rejected.length ? ` (${rejected.join(", ")})` : ""}.`,
+        provider: "smtp",
+      };
+    }
+    return {
+      delivered: true,
+      deliveredTo: accepted,
+      error: rejected.length ? `Rejected: ${rejected.join(", ")}` : "",
+      provider: "smtp",
+    };
+  } catch (err) {
+    return {
+      delivered: false,
+      deliveredTo: [],
+      error: `SMTP send via ${host}:${port} failed: ${smtpErrText(err)}`,
+      provider: "smtp",
+    };
+  }
+}
+
+/** Turn nodemailer/Node socket errors into something a clinic admin can act on. */
+function smtpErrText(err: unknown): string {
+  const code = (err as { code?: string })?.code;
+  const response = (err as { response?: string })?.response;
+  const base = errText(err);
+
+  if (code === "EAUTH") {
+    return `${base} — check SMTP_USER and SMTP_PASS. Gmail needs a 16-character App Password with 2-Step Verification enabled, not the normal account password.`;
+  }
+  if (code === "ETIMEDOUT" || code === "ESOCKET" || code === "ECONNECTION") {
+    return `${base} — could not reach the mail server. Confirm the host and port, and that outbound SMTP is permitted from the host.`;
+  }
+  return response ? `${base} (${response})` : base;
 }
 
 async function sendViaResend(

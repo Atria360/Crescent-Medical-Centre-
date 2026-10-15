@@ -257,6 +257,11 @@ function FormEmailStatus({
                   activation email FormSubmit sends it.
                 </p>
               )}
+              {result.provider === "none" && (
+                <p className="mt-1 leading-snug text-brand-gray">
+                  No mail provider is configured on the server yet.
+                </p>
+              )}
             </>
           )}
         </div>
