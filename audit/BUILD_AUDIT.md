@@ -97,7 +97,7 @@ Public email sign-up is **enabled** on the Supabase project (`/auth/v1/settings`
 
 The `media` bucket compounds it: `file_size_limit: null`, `allowed_mime_types: null`, so the same account can upload arbitrary files of any type and size to a URL on the clinic's domain.
 
-*Nothing has leaked yet* — `messages` currently holds 0 rows and `auth.users` holds only the 2 legitimate accounts. This is exposure, not a breach.
+**Correction (2026-10-15):** an earlier revision of this document said `messages` held 0 rows. That was wrong — the probe used the anon key, and RLS correctly returns an empty set rather than an error, which I read as "empty". Queried with proper credentials, the table holds **25 real patient enquiries** (names, emails, phone numbers, free-text messages). `auth.users` still holds only the 2 legitimate accounts, so there is no evidence of a breach — but the exposure is live patient data, not an empty table, which raises the urgency of closing public sign-up.
 
 **Fix:** turn off public sign-up (Dashboard → Authentication → Sign In / Providers → disable "Allow new users to sign up") and create staff accounts by invitation. Then, defence in depth: add an `admins` table (or a JWT claim) and re-scope every policy from `authenticated` to "is an admin", set a `file_size_limit` and an image-only `allowed_mime_types` on the bucket, and have the middleware check admin status rather than mere authentication.
 
@@ -170,7 +170,9 @@ That is multi-megabyte pages for mobile patients on cellular — the audience mo
 
 `/api/contact` is an unauthenticated public endpoint that writes a row to the database **and** triggers an outbound email per request, with no honeypot field, no CAPTCHA, no rate limit and no size cap on `message`. A trivial script can fill the admin inbox and burn the email quota (and, on FormSubmit's free relay, get the clinic's address throttled).
 
-**Fix:** add a hidden honeypot input, a per-IP rate limit (Vercel KV or Upstash), and a length cap on `message` and `name`.
+**Partially addressed 2026-10-15:** every field is now length-capped server-side (name 120, email 160, phone 40, subject 120, message 5000) and the submitted email is format-validated, so a single request can no longer push unbounded text into the database or the email body.
+
+**Still to do:** a hidden honeypot input and a per-IP rate limit (Vercel KV or Upstash). Without them the endpoint can still be hammered.
 
 ### S3 · Smaller items
 

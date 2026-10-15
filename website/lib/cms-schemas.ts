@@ -37,8 +37,17 @@ export const LOCATION_FIELDS: Field[] = [
   { name: "color_gold", label: "Highlight / gold color", type: "color" },
   { name: "phone", label: "Phone", type: "text" },
   { name: "toll_free", label: "Toll-free", type: "text" },
-  { name: "email", label: "Email", type: "text" },
-  { name: "form_email", label: "Contact form recipient email", type: "text" },
+  {
+    name: "email", label: "Public email", type: "text",
+    help: "Shown to patients on the site. Also used for contact-form enquiries if the field below is left blank.",
+  },
+  {
+    name: "form_email", label: "Contact form goes to", type: "text",
+    help:
+      "Every enquiry submitted on this clinic's Contact Us page is emailed here. " +
+      "Separate several addresses with commas to notify more than one person. " +
+      "Leave blank to fall back to the public email above.",
+  },
   { name: "address", label: "Address", type: "text" },
   { name: "map_embed_src", label: "Google Maps embed URL", type: "textarea" },
   { name: "directions_url", label: "Google Maps directions link", type: "text" },

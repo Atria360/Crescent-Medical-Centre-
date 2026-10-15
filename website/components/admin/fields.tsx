@@ -8,12 +8,14 @@ export const inputCls =
   "w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition-colors focus:border-teal";
 
 export function TextField({
-  label, value, onChange, textarea = false,
+  label, value, onChange, textarea = false, help, placeholder,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   textarea?: boolean;
+  help?: string;
+  placeholder?: string;
 }) {
   return (
     <label className="block">
@@ -21,10 +23,22 @@ export function TextField({
         {label}
       </span>
       {textarea ? (
-        <textarea rows={4} value={value} onChange={(e) => onChange(e.target.value)} className={inputCls} />
+        <textarea
+          rows={4}
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          className={inputCls}
+        />
       ) : (
-        <input value={value} onChange={(e) => onChange(e.target.value)} className={inputCls} />
+        <input
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          className={inputCls}
+        />
       )}
+      {help && <span className="mt-1 block text-xs leading-snug text-brand-gray">{help}</span>}
     </label>
   );
 }

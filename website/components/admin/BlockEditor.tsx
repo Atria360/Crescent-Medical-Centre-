@@ -125,6 +125,7 @@ function FieldEditor({
         value={typeof value === "string" ? value : ""}
         onChange={onChange}
         textarea={field.type === "textarea"}
+        help={field.help}
       />
     );
   }

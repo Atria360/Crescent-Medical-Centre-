@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createPublicClient } from "@/lib/supabase/public";
-import { getBlock, s } from "@/lib/content";
+import { getBlock } from "@/lib/content";
 import { getLocation } from "@/lib/locations";
+import { isValidEmail, resolveRecipients, sendEnquiry } from "@/lib/email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +16,13 @@ type Payload = {
   location?: string;
 };
 
+// Bound what a single submission can push into the database and the email body.
+const LIMITS = { name: 120, email: 160, phone: 40, subject: 120, message: 5000 };
+
+function clean(value: unknown, max: number): string {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
 export async function POST(req: Request) {
   let body: Payload;
   try {
@@ -23,54 +31,72 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
   }
 
-  const name = (body.name ?? "").trim();
-  const email = (body.email ?? "").trim();
-  const phone = (body.phone ?? "").trim();
-  const subject = (body.subject ?? "Contact form").trim() || "Contact form";
-  const message = (body.message ?? "").trim();
-  const location = (body.location ?? "").trim() || null;
+  const name = clean(body.name, LIMITS.name);
+  const email = clean(body.email, LIMITS.email);
+  const phone = clean(body.phone, LIMITS.phone);
+  const subject = clean(body.subject, LIMITS.subject) || "Contact form";
+  const message = clean(body.message, LIMITS.message);
+  const location = clean(body.location, 64) || null;
 
   if (!name || !email || !phone) {
     return NextResponse.json({ ok: false, error: "Missing required fields" }, { status: 400 });
   }
+  if (!isValidEmail(email)) {
+    return NextResponse.json(
+      { ok: false, error: "Please enter a valid email address." },
+      { status: 400 }
+    );
+  }
 
-  // 1. Store the message (stamped with the clinic it came from) so it always
-  //    lands in the admin inbox, even if email delivery is misconfigured.
-  const supabase = createPublicClient();
-  const { error: dbError } = await supabase
-    .from("messages")
-    .insert({ subject, name, email, phone, message, location });
-
-  // 2. Notify the clinic by email — prefer the specific location's inbox.
+  // 1. Work out which inbox this clinic's enquiries go to. The location's own
+  //    form_email wins — see resolveRecipients for the full order.
   const [settings, loc] = await Promise.all([
     getBlock("settings"),
     location ? getLocation(location) : Promise.resolve(null),
   ]);
-  const to =
-    process.env.CONTACT_TO_EMAIL ||
-    loc?.form_email ||
-    loc?.email ||
-    s(settings, "form_email") ||
-    s(settings, "email");
+  const { to } = resolveRecipients(loc, settings, process.env.CONTACT_TO_EMAIL ?? "");
 
-  let emailed = false;
-  if (to) {
-    try {
-      emailed = await sendEmail({
-        to,
-        name,
-        email,
-        phone,
-        subject: loc?.area ? `[${loc.area}] ${subject}` : subject,
-        message,
-      });
-    } catch {
-      emailed = false;
-    }
+  // 2. Send it. Never let a provider failure throw past this point — the
+  //    enquiry still has to reach the admin inbox in step 3.
+  let delivery;
+  try {
+    delivery = await sendEnquiry(to, {
+      name,
+      email,
+      phone,
+      subject,
+      message,
+      area: loc?.area,
+    });
+  } catch {
+    delivery = {
+      delivered: false,
+      deliveredTo: [] as string[],
+      error: "Unexpected error while sending the notification email.",
+      provider: "none" as const,
+    };
   }
 
-  // Succeed as long as the enquiry was captured somewhere reachable.
-  if (dbError && !emailed) {
+  // 3. Always record the enquiry, stamped with the clinic it came from and
+  //    whether the email actually went out, so a misrouted or unconfirmed
+  //    address is visible in Admin → Messages instead of failing silently.
+  const supabase = createPublicClient();
+  const { error: dbError } = await supabase.from("messages").insert({
+    subject,
+    name,
+    email,
+    phone,
+    message,
+    location,
+    delivered: delivery.delivered,
+    // On failure, record the address we *tried*, so a misconfigured recipient
+    // is diagnosable from the inbox rather than invisible.
+    delivered_to: (delivery.delivered ? delivery.deliveredTo : to).join(", "),
+    delivery_error: delivery.error.slice(0, 500),
+  });
+
+  // Only a true dead end — neither emailed nor stored — is reported as failure.
+  if (dbError && !delivery.delivered) {
     return NextResponse.json(
       { ok: false, error: "Could not send your message. Please call us instead." },
       { status: 502 }
@@ -78,60 +104,4 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ ok: true });
-}
-
-async function sendEmail(p: {
-  to: string;
-  name: string;
-  email: string;
-  phone: string;
-  subject: string;
-  message: string;
-}): Promise<boolean> {
-  const text =
-    `New enquiry from the website\n\n` +
-    `Subject: ${p.subject}\n` +
-    `Name:    ${p.name}\n` +
-    `Email:   ${p.email}\n` +
-    `Phone:   ${p.phone}\n\n` +
-    `Message:\n${p.message || "(none)"}\n`;
-
-  // Preferred path: Resend (set RESEND_API_KEY, and CONTACT_FROM_EMAIL once a
-  // sending domain is verified). Sent server-side so the key is never exposed.
-  const resendKey = process.env.RESEND_API_KEY;
-  if (resendKey) {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: process.env.CONTACT_FROM_EMAIL || "Crescent Medical <onboarding@resend.dev>",
-        to: [p.to],
-        reply_to: p.email,
-        subject: `Website enquiry: ${p.subject}`,
-        text,
-      }),
-    });
-    return res.ok;
-  }
-
-  // Zero-config fallback: FormSubmit relays the enquiry to `to` by email.
-  // The very first submission triggers a one-time confirmation email to that
-  // inbox; click the link once and every later submission is delivered.
-  const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(p.to)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({
-      _subject: `Website enquiry: ${p.subject}`,
-      _template: "table",
-      name: p.name,
-      email: p.email,
-      phone: p.phone,
-      subject: p.subject,
-      message: p.message || "(none)",
-    }),
-  });
-  return res.ok;
 }

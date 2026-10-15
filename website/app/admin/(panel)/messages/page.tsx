@@ -12,6 +12,10 @@ interface Message {
   message: string;
   read: boolean;
   created_at: string;
+  location: string | null;
+  delivered: boolean;
+  delivered_to: string;
+  delivery_error: string;
 }
 
 export default function MessagesPage() {
@@ -66,6 +70,11 @@ export default function MessagesPage() {
                   <span className="rounded-full bg-teal px-2.5 py-0.5 text-xs font-bold text-white">NEW</span>
                 )}
                 <h2 className="text-base">{m.name}</h2>
+                {m.location && (
+                  <span className="rounded-full bg-brand-light px-2.5 py-0.5 text-xs font-bold capitalize text-brand-gray">
+                    {m.location}
+                  </span>
+                )}
                 <span className="text-xs text-brand-gray">
                   {new Date(m.created_at).toLocaleString("en-CA")}
                 </span>
@@ -83,6 +92,7 @@ export default function MessagesPage() {
               <p className="mt-3 text-sm font-bold">{m.subject}</p>
             )}
             <p className="mt-1 whitespace-pre-line text-sm text-brand-body">{m.message}</p>
+            <DeliveryNote message={m} />
             <p className="mt-3 text-sm">
               <a href={`mailto:${m.email}`} className="font-bold text-teal hover:underline">{m.email}</a>
               {m.phone && (
@@ -95,6 +105,32 @@ export default function MessagesPage() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Whether this enquiry actually reached the clinic's inbox, and why not. */
+function DeliveryNote({ message }: { message: Message }) {
+  if (message.delivered) {
+    return (
+      <p className="mt-3 text-xs text-brand-gray">
+        ✓ Emailed to <b>{message.delivered_to || "the clinic"}</b>
+      </p>
+    );
+  }
+  return (
+    <div className="mt-3 rounded-lg bg-brand-red/5 px-3 py-2 text-xs">
+      <p className="font-bold text-brand-red">
+        Not emailed — this enquiry exists only here. Follow it up manually.
+      </p>
+      {message.delivered_to && (
+        <p className="mt-1 text-brand-gray">
+          Tried: <b>{message.delivered_to}</b>
+        </p>
+      )}
+      {message.delivery_error && (
+        <p className="mt-1 leading-snug text-brand-gray">{message.delivery_error}</p>
+      )}
     </div>
   );
 }
