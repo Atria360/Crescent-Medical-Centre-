@@ -36,6 +36,7 @@ export const LOCATION_FIELDS: Field[] = [
   { name: "color_accent_dark", label: "Accent color (dark / hover)", type: "color" },
   { name: "color_gold", label: "Highlight / gold color", type: "color" },
   { name: "phone", label: "Phone", type: "text" },
+  { name: "fax", label: "Fax", type: "text", help: "Optional — hidden on the site when left blank." },
   { name: "toll_free", label: "Toll-free", type: "text" },
   {
     name: "email", label: "Public email", type: "text",

@@ -45,6 +45,7 @@ async function buildContext(loc: Location): Promise<string> {
   parts.push(`Clinic: ${loc.name} — ${loc.area} location`);
   if (loc.address) parts.push(`Address: ${loc.address}`);
   if (loc.phone) parts.push(`Phone: ${loc.phone}`);
+  if (loc.fax) parts.push(`Fax: ${loc.fax}`);
   if (loc.toll_free) parts.push(`Toll-free: ${loc.toll_free}`);
   if (loc.email) parts.push(`Email: ${loc.email}`);
   if (hours) parts.push(`Hours: ${hours}`);

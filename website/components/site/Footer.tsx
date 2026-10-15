@@ -133,6 +133,7 @@ export default function Footer({ settings, location }: { settings: BlockData; lo
                 Phone: <a href={`tel:${location.phone}`} className="hover:text-teal">{location.phone}</a>
               </p>
             )}
+            {location.fax && <p className="text-sm">Fax: {location.fax}</p>}
             {location.toll_free && (
               <p className="text-sm">
                 Toll Free: <a href={`tel:${location.toll_free}`} className="hover:text-teal">{location.toll_free}</a>

@@ -16,6 +16,7 @@ export interface Location {
   color_accent_dark: string;
   color_gold: string;
   phone: string;
+  fax: string;
   toll_free: string;
   email: string;
   address: string;
