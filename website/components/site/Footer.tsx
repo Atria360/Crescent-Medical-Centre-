@@ -12,6 +12,7 @@ const DEFAULT_SERVICES = [
 
 const DEFAULT_QUICKLINKS = [
   { label: "Home", href: "/" },
+  { label: "Book Appointment", href: "/book-appointment" },
   { label: "About Us", href: "/about-us" },
   { label: "Gallery", href: "/view-clinic" },
   { label: "FAQ", href: "/faq" },

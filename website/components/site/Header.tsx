@@ -15,6 +15,11 @@ const NAV = [
   { label: "FAQ", href: "/faq" },
 ];
 
+// The booking CTA points at our own /book-appointment page rather than straight
+// out to the booking provider: an external URL can never appear as a Google
+// sitelink, and the page also serves people who would rather call or walk in.
+const BOOKING_PATH = "/book-appointment";
+
 export default function Header({
   location,
   others,
@@ -56,15 +61,13 @@ export default function Header({
             </Link>
           ))}
           {booking && (
-            <a
-              href={booking}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href={`${base}${BOOKING_PATH}`}
               className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-brand-gradient px-4 py-2.5 text-[14px] font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
             >
               <CalendarIcon className="h-4 w-4" />
               {bookingLabel}
-            </a>
+            </Link>
           )}
           {others.length > 0 && (
             <div className="relative">
@@ -109,15 +112,13 @@ export default function Header({
 
         <div className="flex items-center gap-2 nav:hidden">
           {booking && (
-            <a
-              href={booking}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href={`${base}${BOOKING_PATH}`}
               className="inline-flex items-center gap-1.5 rounded-full bg-brand-gradient px-3.5 py-2 text-[13px] font-bold text-white shadow-md"
             >
               <CalendarIcon className="h-3.5 w-3.5" />
               Book
-            </a>
+            </Link>
           )}
           <button onClick={() => setOpen(!open)} aria-label="Toggle menu">
           <svg className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -134,16 +135,14 @@ export default function Header({
       {open && (
         <nav className="border-t border-gray-100 bg-white px-4 pb-4 shadow-[2px_2px_2px_lightgrey] nav:hidden">
           {booking && (
-            <a
-              href={booking}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href={`${base}${BOOKING_PATH}`}
               onClick={() => setOpen(false)}
               className="my-3 flex items-center justify-center gap-2 rounded-full bg-brand-gradient px-5 py-3 text-[15px] font-bold text-white shadow-md"
             >
               <CalendarIcon className="h-4 w-4" />
               {bookingLabel}
-            </a>
+            </Link>
           )}
           {NAV.map((item) => (
             <Link

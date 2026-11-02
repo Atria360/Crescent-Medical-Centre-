@@ -6,6 +6,7 @@ export const revalidate = 3600;
 
 const PAGES = [
   "",
+  "/book-appointment",
   "/about-us",
   "/our-team",
   "/medical-services",
@@ -21,6 +22,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const entries: MetadataRoute.Sitemap = [
     { url: SITE_URL, lastModified: now, changeFrequency: "weekly", priority: 1 },
+    {
+      url: `${SITE_URL}/book-appointment`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
   ];
 
   for (const loc of locations) {

@@ -4,6 +4,7 @@ import { getBlock, getCollection, s } from "@/lib/content";
 import { getLocations, getPrimaryLocation, themeVars } from "@/lib/locations";
 import { mediaUrl } from "@/lib/config";
 import ContinueBanner from "@/components/site/ContinueBanner";
+import { SITE_URL } from "@/lib/config";
 
 export const revalidate = 60;
 
@@ -31,8 +32,32 @@ export default async function ChooserPage() {
 
   const siteName = s(settings, "site_name", "Crescent Medical Centre");
 
+  // Tells search engines what the site's main sections are. Google uses signals
+  // like this (plus internal linking) when deciding which sitelinks to show.
+  const navLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: [
+      { name: "Book an Appointment", url: `${SITE_URL}/book-appointment` },
+      { name: "Our Team", url: `${SITE_URL}/${primary?.slug ?? "westbrook"}/our-team` },
+      { name: "Medical Services", url: `${SITE_URL}/${primary?.slug ?? "westbrook"}/medical-services` },
+      { name: "Contact Us", url: `${SITE_URL}/${primary?.slug ?? "westbrook"}/contact-us` },
+      { name: "Uninsured Services", url: `${SITE_URL}/${primary?.slug ?? "westbrook"}/uninsured-services` },
+      { name: "FAQ", url: `${SITE_URL}/${primary?.slug ?? "westbrook"}/faq` },
+    ].map((item, i) => ({
+      "@type": "SiteNavigationElement",
+      position: i + 1,
+      name: item.name,
+      url: item.url,
+    })),
+  };
+
   return (
     <main className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(navLd) }}
+      />
       <ContinueBanner options={locations.map((l) => ({ slug: l.slug, area: l.area }))} />
 
       {/* Split hero — each half self-brands in its clinic's palette */}
