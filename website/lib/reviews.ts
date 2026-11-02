@@ -33,7 +33,10 @@ interface PlacesReview {
   authorAttribution?: { displayName?: string; uri?: string };
 }
 
-const CACHE_TTL_MS = 10 * 60_000;
+// Reviews change rarely, so cache hard. This is what keeps the Google Places
+// bill at essentially nothing: ~2 upstream calls per clinic per day rather
+// than one per page render.
+const CACHE_TTL_MS = 12 * 60 * 60_000; // 12 hours
 const cache = new Map<string, { at: number; reviews: Review[] }>();
 
 /**
@@ -86,7 +89,7 @@ async function fetchGoogleReviews(loc: Location): Promise<Review[]> {
         },
         signal: AbortSignal.timeout(6000),
         // Reviews change slowly; let Next cache the upstream call too.
-        next: { revalidate: 600 },
+        next: { revalidate: 43200 }, // 12 hours
       }
     );
     if (!res.ok) return [];
