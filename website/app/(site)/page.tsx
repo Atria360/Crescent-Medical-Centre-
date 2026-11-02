@@ -141,6 +141,16 @@ export default async function ChooserPage() {
                   <p key={i}>{h.line}</p>
                 ))}
                 <div className="flex flex-wrap gap-3 pt-3">
+                  {loc.booking_url?.trim() && (
+                    <a
+                      href={loc.booking_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-full bg-brand-gradient px-5 py-2.5 text-sm font-bold text-white shadow-md transition-transform hover:-translate-y-0.5"
+                    >
+                      {loc.booking_label?.trim() || "Book Appointment"}
+                    </a>
+                  )}
                   <Link href={`/${loc.slug}`} className="btn-teal text-sm">
                     Visit {loc.area}
                   </Link>

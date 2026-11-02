@@ -30,6 +30,9 @@ export interface Location {
   hero_image: string;
   google_reviews_url: string;
   form_email: string;
+  booking_url: string;
+  booking_label: string;
+  google_place_id: string;
 }
 
 export async function getLocations(): Promise<Location[]> {

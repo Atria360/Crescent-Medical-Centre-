@@ -1,23 +1,21 @@
 import PageHero from "@/components/site/PageHero";
-import { getBlock, getCollection, s, list } from "@/lib/content";
+import Reviews from "@/components/site/Reviews";
+import { getBlock, s, list } from "@/lib/content";
+import { getLocation } from "@/lib/locations";
+import { getReviews } from "@/lib/reviews";
 import { mediaUrl } from "@/lib/config";
 
 export const revalidate = 60;
-
-interface Testimonial {
-  id: string;
-  name: string;
-  quote: string;
-}
 
 export const metadata = { title: "About Us – Crescent Medical Centre" };
 
 export default async function AboutPage({ params }: { params: Promise<{ location: string }> }) {
   const { location } = await params;
-  const [block, testimonials] = await Promise.all([
+  const [block, loc] = await Promise.all([
     getBlock("about_page", location),
-    getCollection<Testimonial>("testimonials", { location }),
+    getLocation(location),
   ]);
+  const reviews = await getReviews(loc);
 
   return (
     <>
@@ -99,23 +97,13 @@ export default async function AboutPage({ params }: { params: Promise<{ location
         </div>
       </section>
 
-      {/* Testimonials */}
-      {testimonials.length > 0 && (
-        <section className="bg-brand-light py-20">
-          <div className="mx-auto max-w-7xl px-4">
-            <h2 className="section-heading heading-accent text-center" data-reveal>{s(block, "testimonials_heading", "Our Patients' Experiences")}</h2>
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
-              {testimonials.map((t) => (
-                <figure key={t.id} className="card p-8 hover:shadow-xl" data-reveal>
-                  <svg className="h-8 w-8 text-teal" fill="currentColor" viewBox="0 0 24 24"><path d="M9.6 5C6 7 3.9 10 3.9 14.1c0 3 1.8 4.9 4.1 4.9 2.1 0 3.6-1.5 3.6-3.5S10.2 12 8.2 12c-.4 0-.9.1-1 .1.3-2 2-4.3 4-5.5L9.6 5Zm10 0c-3.5 2-5.7 5-5.7 9.1 0 3 1.8 4.9 4.1 4.9 2.1 0 3.6-1.5 3.6-3.5S20.2 12 18.2 12c-.4 0-.8.1-1 .1.3-2 2-4.3 4-5.5L19.6 5Z"/></svg>
-                  <blockquote className="mt-4 text-sm leading-relaxed text-brand-body">{t.quote}</blockquote>
-                  <figcaption className="mt-4 text-sm font-bold">{t.name}</figcaption>
-                </figure>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Patient reviews — this clinic's own */}
+      <Reviews
+        reviews={reviews}
+        area={loc?.area ?? ""}
+        reviewsUrl={loc?.google_reviews_url}
+        heading={s(block, "testimonials_heading", "Our Patients' Experiences")}
+      />
     </>
   );
 }

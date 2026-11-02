@@ -24,6 +24,31 @@ export default async function ContactPage({ params }: { params: Promise<{ locati
         background={s(block, "hero_background")}
       />
 
+      {/* Book online — the fastest route, so it sits above everything else */}
+      {loc?.booking_url?.trim() ? (
+        <section className="mx-auto max-w-7xl px-4 pt-12">
+          <div
+            className="card flex flex-col items-center justify-between gap-5 bg-brand-gradient px-8 py-7 text-white sm:flex-row"
+            data-reveal
+          >
+            <div>
+              <h2 className="text-xl">Book online, any time</h2>
+              <p className="mt-1.5 text-sm text-white/90">
+                Pick your own appointment time instantly — no phone call needed.
+              </p>
+            </div>
+            <a
+              href={loc.booking_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-white shrink-0 whitespace-nowrap"
+            >
+              {loc.booking_label?.trim() || "Book Appointment"} →
+            </a>
+          </div>
+        </section>
+      ) : null}
+
       {/* Info cards */}
       <section className="mx-auto max-w-7xl px-4 py-16">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

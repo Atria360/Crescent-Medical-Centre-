@@ -27,6 +27,17 @@ export interface BlockSchema {
 export const LOCATION_FIELDS: Field[] = [
   { name: "area", label: "Location name / area", type: "text" },
   { name: "tagline", label: "Tagline / one-liner", type: "text" },
+  {
+    name: "booking_url", label: "Online booking link", type: "text",
+    help:
+      "Paste this clinic's online booking URL (e.g. its Medeo page). A highlighted button then appears " +
+      "in the header on every page, in the home hero, and on the Book Appointment card. Leave blank and " +
+      "those all fall back to the contact form.",
+  },
+  {
+    name: "booking_label", label: "Booking button wording", type: "text",
+    help: "Optional. Defaults to \u201cBook Appointment\u201d.",
+  },
   { name: "logo", label: "Header logo", type: "image" },
   { name: "logo_white", label: "Footer / dark-bg logo (white)", type: "image" },
   { name: "hero_image", label: "Chooser hero image", type: "image" },
@@ -52,7 +63,16 @@ export const LOCATION_FIELDS: Field[] = [
   { name: "address", label: "Address", type: "text" },
   { name: "map_embed_src", label: "Google Maps embed URL", type: "textarea" },
   { name: "directions_url", label: "Google Maps directions link", type: "text" },
-  { name: "google_reviews_url", label: "Google review link", type: "text" },
+  {
+    name: "google_reviews_url", label: "Google review link", type: "text",
+    help: "Your Google Maps/Business link for this clinic. Used by the \u201cRead reviews\u201d and \u201cLeave us a review\u201d buttons.",
+  },
+  {
+    name: "google_place_id", label: "Google Place ID", type: "text",
+    help:
+      "Optional. With a GOOGLE_PLACES_API_KEY configured on the server, this pulls live Google reviews " +
+      "for this clinic (max 5). Leave blank to show the reviews you enter under Testimonials instead.",
+  },
   { name: "facebook", label: "Facebook URL", type: "text" },
   { name: "instagram", label: "Instagram URL", type: "text" },
   {
@@ -410,12 +430,19 @@ export const COLLECTION_SCHEMAS: CollectionSchema[] = [
   },
   {
     table: "testimonials",
-    label: "Testimonials",
-    singular: "testimonial",
+    label: "Reviews / Testimonials",
+    singular: "review",
     orderBy: "sort",
     columns: [
-      { name: "name", label: "Name", type: "text", inTable: true },
-      { name: "quote", label: "Quote", type: "textarea", inTable: true },
+      { name: "name", label: "Reviewer name", type: "text", inTable: true },
+      { name: "quote", label: "Review", type: "textarea", inTable: true },
+      { name: "rating", label: "Stars (1-5)", type: "number", inTable: true },
+      {
+        name: "source", label: "Source", type: "select", inTable: true,
+        options: ["google", "clinic"],
+      },
+      { name: "review_date", label: "When", type: "text" },
+      { name: "profile_url", label: "Link to the review", type: "text" },
       { name: "sort", label: "Order", type: "number", inTable: true },
     ],
   },

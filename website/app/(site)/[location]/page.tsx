@@ -3,6 +3,8 @@ import { getBlocks, getCollection, s, list } from "@/lib/content";
 import { mediaUrl } from "@/lib/config";
 import { getLocation } from "@/lib/locations";
 import ChatOpenButton from "@/components/site/ChatOpenButton";
+import Reviews from "@/components/site/Reviews";
+import { getReviews } from "@/lib/reviews";
 
 export const revalidate = 60;
 
@@ -54,6 +56,9 @@ export default async function HomePage({ params }: { params: Promise<{ location:
   const chatbot = blocks.home_chatbot;
   const business = blocks.home_business;
   const resources = blocks.home_resources;
+  const reviews = await getReviews(loc);
+  const booking = loc?.booking_url?.trim() ?? "";
+  const bookingLabel = loc?.booking_label?.trim() || "Book Appointment";
   const phone = loc?.phone ?? "";
   const directions = loc?.directions_url ?? "";
   const mapSrc = loc?.map_embed_src ?? "";
@@ -75,32 +80,89 @@ export default async function HomePage({ params }: { params: Promise<{ location:
         <div className="hero-in relative mx-auto max-w-7xl px-4 pb-40 pt-20 text-white md:pt-32">
           <h1 className="max-w-2xl text-3xl leading-tight md:text-4xl">{s(hero, "heading")}</h1>
           <p className="mt-5 max-w-xl text-sm md:text-base">{s(hero, "subheading")}</p>
-          <div className="mt-8">
-            <Link href={L(s(hero, "cta_href", "/contact-us"))} className="btn-white">
-              {s(hero, "cta_label", "Contact Us")}
-            </Link>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            {booking ? (
+              <>
+                <a
+                  href={booking}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-2.5 rounded-full bg-white px-8 py-4 text-base font-bold text-teal shadow-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl"
+                >
+                  <CalendarIcon />
+                  {bookingLabel} Online
+                  <ArrowIcon />
+                </a>
+                <Link
+                  href={L(s(hero, "cta_href", "/contact-us"))}
+                  className="inline-flex items-center rounded-full border-2 border-white/80 px-7 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/15"
+                >
+                  {s(hero, "cta_label", "Contact Us")}
+                </Link>
+              </>
+            ) : (
+              <Link href={L(s(hero, "cta_href", "/contact-us"))} className="btn-white">
+                {s(hero, "cta_label", "Contact Us")}
+              </Link>
+            )}
           </div>
+          {booking && (
+            <p className="mt-4 text-xs font-medium text-white/85">
+              Book your own appointment time online — no phone call needed.
+            </p>
+          )}
         </div>
       </section>
 
       {/* Quick action cards */}
       <section className="relative z-10 mx-auto -mt-24 max-w-6xl px-4">
         <div className="grid gap-6 md:grid-cols-3">
-          {list(quick, "cards").map((card, i) => (
-            <Link
-              key={i}
-              href={L(card.href || "/contact-us")}
-              data-reveal
-              data-reveal-delay={String(i + 1)}
-              className="card flex flex-col items-center px-8 py-10 text-center transition-transform hover:-translate-y-1 hover:shadow-xl"
-            >
-              {card.icon ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={mediaUrl(card.icon)} alt="" className="mb-5 h-14 w-14" loading="lazy" />
-              ) : null}
-              <h3 className="text-lg">{card.title}</h3>
-            </Link>
-          ))}
+          {list(quick, "cards").map((card, i) => {
+            // The first card is the "Book Appointment" action — point it at the
+            // real booking site when this clinic has one, and mark it visually.
+            const isBooking = Boolean(booking) && i === 0;
+            const inner = (
+              <>
+                {card.icon ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={mediaUrl(card.icon)} alt="" className="mb-5 h-14 w-14" loading="lazy" />
+                ) : null}
+                <h3 className="text-lg">{isBooking ? bookingLabel : card.title}</h3>
+                {isBooking && (
+                  <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-teal">
+                    Book online now <ArrowIcon />
+                  </span>
+                )}
+              </>
+            );
+            const cls =
+              "card flex flex-col items-center px-8 py-10 text-center transition-transform hover:-translate-y-1 hover:shadow-xl" +
+              (isBooking ? " ring-2 ring-teal" : "");
+
+            return isBooking ? (
+              <a
+                key={i}
+                href={booking}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-reveal
+                data-reveal-delay={String(i + 1)}
+                className={cls}
+              >
+                {inner}
+              </a>
+            ) : (
+              <Link
+                key={i}
+                href={L(card.href || "/contact-us")}
+                data-reveal
+                data-reveal-delay={String(i + 1)}
+                className={cls}
+              >
+                {inner}
+              </Link>
+            );
+          })}
         </div>
       </section>
 
@@ -199,6 +261,13 @@ export default async function HomePage({ params }: { params: Promise<{ location:
         </div>
       </section>
 
+      {/* Patient reviews — this clinic's own */}
+      <Reviews
+        reviews={reviews}
+        area={loc?.area ?? ""}
+        reviewsUrl={loc?.google_reviews_url}
+      />
+
       {/* Help CTA + business enquiries */}
       <section className="mx-auto grid max-w-7xl gap-10 px-4 py-20 lg:grid-cols-2">
         <div className="card relative min-w-0 overflow-hidden bg-brand-gradient p-7 text-white md:p-10" data-reveal>
@@ -220,12 +289,24 @@ export default async function HomePage({ params }: { params: Promise<{ location:
                 </a>
               ) : null}
               <ChatOpenButton label="Chat with us" />
-              <Link
-                href={`${base}/contact-us`}
-                className="inline-flex items-center gap-2 rounded-full border border-white/70 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10"
-              >
-                Book an Appointment
-              </Link>
+              {booking ? (
+                <a
+                  href={booking}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/70 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10"
+                >
+                  <CalendarIcon />
+                  {bookingLabel} Online
+                </a>
+              ) : (
+                <Link
+                  href={`${base}/contact-us`}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/70 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-white/10"
+                >
+                  Book an Appointment
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -303,6 +384,14 @@ function PhoneIcon() {
   return (
     <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
       <path d="M6.62 10.79a15.53 15.53 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.4 11.4 0 0 0 3.57.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.24.2 2.45.57 3.57a1 1 0 0 1-.24 1.02l-2.21 2.2Z" />
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+      <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1ZM4 10v9a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-9H4Zm5 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm4 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm4 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z" />
     </svg>
   );
 }

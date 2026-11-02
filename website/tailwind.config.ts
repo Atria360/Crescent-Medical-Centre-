@@ -8,6 +8,11 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // The header's full nav (7 links + booking CTA + location switcher)
+      // needs ~1360px; below this it collapses to the compact bar + drawer.
+      screens: {
+        nav: "1360px",
+      },
       colors: {
         // `teal` = per-location primary; `brand.red` = per-location accent.
         // Names are kept for backwards-compat; values resolve to runtime CSS

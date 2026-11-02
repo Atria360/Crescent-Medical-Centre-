@@ -48,6 +48,10 @@ async function buildContext(loc: Location): Promise<string> {
   if (loc.fax) parts.push(`Fax: ${loc.fax}`);
   if (loc.toll_free) parts.push(`Toll-free: ${loc.toll_free}`);
   if (loc.email) parts.push(`Email: ${loc.email}`);
+  if (loc.booking_url)
+    parts.push(
+      `Online booking: patients can book an appointment themselves at ${loc.booking_url} — share this link when someone asks how to book.`
+    );
   if (hours) parts.push(`Hours: ${hours}`);
   if (loc.hours_note) parts.push(`Hours note: ${loc.hours_note}`);
 
